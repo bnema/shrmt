@@ -54,7 +54,7 @@ Confirmed usable:
 CLI:
 
 ```bash
-rtk proxy go run . discover --timeout 5s
+go run . discover --timeout 5s
 ```
 
 ### 2.2 Endpoint probing
@@ -69,7 +69,7 @@ Confirmed usable:
 CLI:
 
 ```bash
-rtk proxy go run . probe --timeout 5s
+go run . probe --timeout 5s
 ```
 
 ### 2.3 Android TV Remote v2 pairing
@@ -85,7 +85,7 @@ Confirmed usable:
 CLI:
 
 ```bash
-rtk proxy go run . pair
+go run . pair
 ```
 
 ### 2.4 Basic remote command path
@@ -103,7 +103,7 @@ Hardware-validated command so far:
 CLI:
 
 ```bash
-rtk proxy go run . key home
+go run . key home
 ```
 
 ## 3. Implemented in the CLI but not yet fully validated on hardware
@@ -119,7 +119,7 @@ Implemented:
 CLI:
 
 ```bash
-rtk proxy go run . power
+go run . power
 ```
 
 ### 3.2 Additional key actions

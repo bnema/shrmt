@@ -14,32 +14,32 @@ Small Go proof of concept for discovering, pairing with, and controlling an NVID
 Build:
 
 ```bash
-rtk proxy go build ./...
+go build ./...
 ```
 
 Discover devices:
 
 ```bash
-rtk proxy go run . discover --timeout 5s
+go run . discover --timeout 5s
 ```
 
 Probe endpoints:
 
 ```bash
-rtk proxy go run . probe --timeout 5s
+go run . probe --timeout 5s
 ```
 
 Pair:
 
 ```bash
-rtk proxy go run . pair
+go run . pair
 ```
 
 Send a key:
 
 ```bash
-rtk proxy go run . key home
-rtk proxy go run . power
+go run . key home
+go run . power
 ```
 
 ## Credentials
