@@ -30,7 +30,9 @@ func DialSession(ctx context.Context, params SendKeyParams) (*Session, error) {
 
 	dialer := &tls.Dialer{
 		Config: &tls.Config{
-			Certificates:       []tls.Certificate{cert},
+			Certificates: []tls.Certificate{cert},
+			// Android TV Remote uses self-signed mutual TLS certs established during pairing,
+			// so default CA-based verification does not apply here.
 			InsecureSkipVerify: true,
 			ServerName:         inferServerName(params.Host),
 		},
