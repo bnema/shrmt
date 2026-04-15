@@ -1,0 +1,21 @@
+# Binaries
+shield-poc
+/dist
+
+# Local captures / reverse-engineering artifacts
+*.pcap
+*.pcapng
+*.apk
+captures/
+certs/
+research/private/
+
+# Local device / pairing material
+pairedHosts.json
+*.pem
+*.key
+*.p12
+*.der
+
+# OS/editor
+.DS_Store
