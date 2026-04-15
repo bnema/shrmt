@@ -15,6 +15,7 @@ This repository currently contains:
 
 - shareable research notes under [`research/`](./research)
 - a tiny discovery CLI that can browse likely SHIELD / Android TV mDNS services
+- a small probe CLI that can test discovered endpoints for TCP and TLS availability
 
 ## Documentation index
 
@@ -43,13 +44,14 @@ Examples use placeholders or redacted values when needed.
 
 ## Tiny CLI
 
-The current CLI is focused on discovery.
+The current CLI is focused on discovery and endpoint probing.
 
 ```bash
 rtk proxy go run . discover --timeout 5s
+rtk proxy go run . probe --timeout 5s
 ```
 
-Example output shape:
+Example discovery output shape:
 
 ```text
 service=_androidtvremote2._tcp instance="<device-name>" host=<host>.local port=6466
@@ -59,6 +61,16 @@ service=_androidtvremote2._tcp instance="<device-name>" host=<host>.local port=6
 service=_nv_shield_remote._tcp instance="<device-name>" host=<host>.local port=8987
   ipv4: <redacted>
   txt:  SERVER=<redacted>, SERVER_CAPABILITY=<value>
+```
+
+Example probe output shape:
+
+```text
+target=<redacted>:6466 service=_androidtvremote2._tcp instance="<device-name>"
+  tcp: true
+  tls: true protocol=TLS1.3 cipher=TLS_AES_256_GCM_SHA384
+  cert_common_name: <redacted>
+  cert_self_signed: true
 ```
 
 ## Build
