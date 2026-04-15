@@ -23,6 +23,7 @@ This repository currently contains:
 
 - [`research/README.md`](./research/README.md) — research index
 - [`research/official-references.md`](./research/official-references.md) — official Android / AOSP references
+- [`research/exposed-surfaces.md`](./research/exposed-surfaces.md) — what is exposed, what is usable, and what remains inferred
 - [`research/nvidia-shield-tv-apk-notes.md`](./research/nvidia-shield-tv-apk-notes.md) — APK reverse-engineering notes
 - [`research/live-network-findings.md`](./research/live-network-findings.md) — sanitized live discovery / TLS findings
 - [`research/poc-plan.md`](./research/poc-plan.md) — phased implementation plan

@@ -6,6 +6,8 @@ This directory contains shareable research notes for the NVIDIA SHIELD TV contro
 
 - [`official-references.md`](./official-references.md)
   - official Android TV, Android platform, ADB, and AOSP references
+- [`exposed-surfaces.md`](./exposed-surfaces.md)
+  - confirmed exposed services, confirmed usable features, inferred capabilities, and current limits
 - [`nvidia-shield-tv-apk-notes.md`](./nvidia-shield-tv-apk-notes.md)
   - findings from static inspection of the NVIDIA SHIELD TV Android app
 - [`live-network-findings.md`](./live-network-findings.md)
