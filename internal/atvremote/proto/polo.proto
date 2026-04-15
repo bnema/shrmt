@@ -1,0 +1,79 @@
+syntax = "proto2";
+
+package polo.wire.protobuf;
+
+option go_package = "shield-poc/internal/atvremote/proto;atvpb";
+option java_outer_classname = "PoloProto";
+option java_package = "com.google.polo.wire.protobuf";
+option optimize_for = LITE_RUNTIME;
+
+message OuterMessage {
+  enum Status {
+    STATUS_OK = 200;
+    STATUS_ERROR = 400;
+    STATUS_BAD_CONFIGURATION = 401;
+    STATUS_BAD_SECRET = 402;
+  }
+
+  required uint32 protocol_version = 1 [default = 1];
+  required Status status = 2;
+
+  optional PairingRequest pairing_request = 10;
+  optional PairingRequestAck pairing_request_ack = 11;
+
+  optional Options options = 20;
+  optional Configuration configuration = 30;
+  optional ConfigurationAck configuration_ack = 31;
+
+  optional Secret secret = 40;
+  optional SecretAck secret_ack = 41;
+}
+
+message PairingRequest {
+  required string service_name = 1;
+  optional string client_name = 2;
+}
+
+message PairingRequestAck {
+  optional string server_name = 1;
+}
+
+message Options {
+  message Encoding {
+    enum EncodingType {
+      ENCODING_TYPE_UNKNOWN = 0;
+      ENCODING_TYPE_ALPHANUMERIC = 1;
+      ENCODING_TYPE_NUMERIC = 2;
+      ENCODING_TYPE_HEXADECIMAL = 3;
+      ENCODING_TYPE_QRCODE = 4;
+    }
+
+    required EncodingType type = 1;
+    required uint32 symbol_length = 2;
+  }
+
+  enum RoleType {
+    ROLE_TYPE_UNKNOWN = 0;
+    ROLE_TYPE_INPUT = 1;
+    ROLE_TYPE_OUTPUT = 2;
+  }
+
+  repeated Encoding input_encodings = 1;
+  repeated Encoding output_encodings = 2;
+  optional RoleType preferred_role = 3;
+}
+
+message Configuration {
+  required Options.Encoding encoding = 1;
+  required Options.RoleType client_role = 2;
+}
+
+message ConfigurationAck {}
+
+message Secret {
+  required bytes secret = 1;
+}
+
+message SecretAck {
+  required bytes secret = 1;
+}

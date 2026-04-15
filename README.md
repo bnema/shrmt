@@ -14,8 +14,9 @@ Research-driven proof of concept for controlling an NVIDIA SHIELD TV from a Linu
 This repository currently contains:
 
 - shareable research notes under [`research/`](./research)
-- a tiny discovery CLI that can browse likely SHIELD / Android TV mDNS services
-- a small probe CLI that can test discovered endpoints for TCP and TLS availability
+- a discovery CLI that can browse likely SHIELD / Android TV mDNS services
+- a probe CLI that can test discovered endpoints for TCP and TLS availability
+- an Android TV Remote v2 pairing CLI for generating local client credentials and initiating TV pairing
 
 ## Documentation index
 
@@ -44,11 +45,12 @@ Examples use placeholders or redacted values when needed.
 
 ## Tiny CLI
 
-The current CLI is focused on discovery and endpoint probing.
+The current CLI supports discovery, probing, and Android TV Remote v2 pairing.
 
 ```bash
 rtk proxy go run . discover --timeout 5s
 rtk proxy go run . probe --timeout 5s
+rtk proxy go run . pair
 ```
 
 Example discovery output shape:
@@ -73,6 +75,11 @@ target=<redacted>:6466 service=_androidtvremote2._tcp instance="<device-name>"
   cert_self_signed: true
 ```
 
+Pairing credentials default to your user config directory, for example:
+
+- `~/.config/shield-poc/androidtv-client-cert.pem`
+- `~/.config/shield-poc/androidtv-client-key.pem`
+
 ## Build
 
 ```bash
@@ -82,6 +89,6 @@ rtk proxy go build ./...
 ## Next steps
 
 1. keep polishing public research docs
-2. implement pairing for Android TV Remote v2
-3. validate basic commands: home, back, d-pad, select, power
+2. validate the Android TV Remote v2 pairing flow on hardware
+3. implement basic commands: home, back, d-pad, select, power
 4. investigate the proprietary NVIDIA `nvbeyonder` path for SHIELD-specific features
