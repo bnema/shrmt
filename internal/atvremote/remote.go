@@ -63,78 +63,17 @@ type remoteClient struct {
 
 	readyOnce sync.Once
 	readyCh   chan struct{}
+	startOnce sync.Once
+	startCh   chan struct{}
 }
 
 func SendKey(ctx context.Context, params SendKeyParams, action string) (*SendKeyResult, error) {
-	params = normalizeSendKeyParams(params)
-	if params.Host == "" {
-		return nil, errors.New("host is required")
-	}
-
-	keyCode, err := ResolveKeyCode(action)
+	session, err := DialSession(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-
-	cert, err := tls.LoadX509KeyPair(params.CertPath, params.KeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("load cert/key: %w", err)
-	}
-
-	dialer := &tls.Dialer{
-		Config: &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			InsecureSkipVerify: true,
-			ServerName:         inferServerName(params.Host),
-		},
-	}
-
-	conn, err := dialer.DialContext(ctx, "tcp", endpoint(params.Host, params.Port))
-	if err != nil {
-		return nil, fmt.Errorf("connect remote endpoint: %w", err)
-	}
-	tlsConn, ok := conn.(*tls.Conn)
-	if !ok {
-		_ = conn.Close()
-		return nil, errors.New("expected tls connection")
-	}
-
-	client := newRemoteClient(tlsConn)
-	defer client.close()
-	go client.run()
-
-	if err := client.waitReady(params.ReadyTimeout); err != nil {
-		return nil, fmt.Errorf("wait remote ready: %w", err)
-	}
-
-	if err := client.sendKey(keyCode, pb.RemoteDirection_SHORT); err != nil {
-		return nil, fmt.Errorf("send key: %w", err)
-	}
-
-	if params.PostDelay > 0 {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-time.After(params.PostDelay):
-		}
-	}
-
-	if err := client.getErr(); err != nil {
-		return nil, err
-	}
-
-	supported, active := client.getFeatures()
-	powered, hasPower := client.getPowerState()
-
-	return &SendKeyResult{
-		Host:              params.Host,
-		Port:              params.Port,
-		Action:            normalizeAction(action),
-		SupportedFeatures: supported,
-		ActiveFeatures:    active,
-		Powered:           powered,
-		HasPowerState:     hasPower,
-	}, nil
+	defer session.Close()
+	return session.SendKeyWithDelay(ctx, action, params.PostDelay)
 }
 
 func normalizeSendKeyParams(params SendKeyParams) SendKeyParams {
@@ -157,6 +96,7 @@ func newRemoteClient(conn *tls.Conn) *remoteClient {
 		activeFeatures: defaultFeatures,
 		supportedBits:  0,
 		readyCh:        make(chan struct{}),
+		startCh:        make(chan struct{}),
 	}
 }
 
@@ -270,6 +210,7 @@ func (c *remoteClient) handleIncoming(msg *pb.RemoteMessage) error {
 		c.powered = msg.RemoteStart.Started
 		c.hasPowerState = true
 		c.stateMu.Unlock()
+		c.markStarted()
 		c.markReady()
 		return nil
 
@@ -315,6 +256,24 @@ func (c *remoteClient) markReady() {
 	c.readyOnce.Do(func() {
 		close(c.readyCh)
 	})
+}
+
+func (c *remoteClient) markStarted() {
+	c.startOnce.Do(func() {
+		close(c.startCh)
+	})
+}
+
+func (c *remoteClient) waitStarted(timeout time.Duration) bool {
+	if timeout <= 0 {
+		return false
+	}
+	select {
+	case <-c.startCh:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
 }
 
 func (c *remoteClient) getPowerState() (bool, bool) {

@@ -59,6 +59,13 @@ func (s *Sender) Send(ctx context.Context, target device.Target, creds pairing.C
 	}, nil
 }
 
+func (s *Sender) Warmup(ctx context.Context, target device.Target, creds pairing.Credentials) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.ensureSessionLocked(ctx, target, creds)
+	return err
+}
+
 func (p *Pairer) Pair(ctx context.Context, req pairing.PairRequest) (pairing.Credentials, error) {
 	port := p.PairingPort
 	if port == 0 {
