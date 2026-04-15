@@ -10,6 +10,8 @@ import (
 	pb "github.com/drosocode/atvremote/pkg/v2/proto"
 )
 
+const sessionStartGracePeriod = 750 * time.Millisecond
+
 type Session struct {
 	params SendKeyParams
 	client *remoteClient
@@ -51,6 +53,7 @@ func DialSession(ctx context.Context, params SendKeyParams) (*Session, error) {
 		client.close()
 		return nil, fmt.Errorf("wait remote ready: %w", err)
 	}
+	client.waitStarted(sessionStartGracePeriod)
 	if err := client.getErr(); err != nil {
 		client.close()
 		return nil, err

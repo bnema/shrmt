@@ -34,6 +34,10 @@ type Sender interface {
 	Send(ctx context.Context, target device.Target, creds pairing.Credentials, act action.Action) (SendResult, error)
 }
 
+type Warmupper interface {
+	Warmup(ctx context.Context, target device.Target, creds pairing.Credentials) error
+}
+
 type Service struct {
 	devices *device.Service
 	pairing *pairing.Service
@@ -69,6 +73,11 @@ func (s *Service) Load(ctx context.Context, explicit *device.Target) (State, err
 	}
 	state.Target = target
 	state.HasTarget = !target.IsZero()
+	if state.HasTarget && state.Pairing.Available {
+		if warmupper, ok := s.sender.(Warmupper); ok {
+			_ = warmupper.Warmup(ctx, target, state.Pairing.Credentials)
+		}
+	}
 	return state, nil
 }
 
