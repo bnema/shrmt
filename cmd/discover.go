@@ -66,10 +66,6 @@ func init() {
 
 	discoverCmd.Flags().DurationVar(&discoverTimeout, "timeout", 5*time.Second, "discovery timeout")
 	discoverCmd.Flags().StringVar(&discoverDomain, "domain", "local", "mDNS domain")
-	discoverCmd.Flags().StringSliceVar(&discoverServices, "service", []string{
-		"_nv_shield_remote._tcp",
-		"_androidtvremote._tcp",
-		"_androidtvremote2._tcp",
-	}, "service(s) to browse")
+	discoverCmd.Flags().StringSliceVar(&discoverServices, "service", discovery.DefaultServices(), "service(s) to browse")
 	discoverCmd.Flags().BoolVar(&discoverJSON, "json", false, "emit JSON")
 }

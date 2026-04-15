@@ -14,12 +14,26 @@ Status: **in progress / partially implemented**
 Goals:
 - scan likely mDNS services
 - confirm which protocols are actually exposed by a SHIELD device
+- probe discovered endpoints for TCP / TLS behavior
 - record only sanitized findings in public docs
 
 Candidate services:
 - `_androidtvremote._tcp`
 - `_androidtvremote2._tcp`
 - `_nv_shield_remote._tcp`
+
+## Phase 1.5 — endpoint probing
+
+Status: **implemented as an early CLI command**
+
+Goals:
+- verify that discovered endpoints are reachable
+- confirm whether they expect TLS
+- capture certificate naming patterns and protocol versions during local testing
+
+Why this matters:
+- helps distinguish the standard Android TV path from the NVIDIA-specific path
+- gives us a safer next step before implementing pairing
 
 ## Phase 2 — standard Android TV path
 

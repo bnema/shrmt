@@ -21,6 +21,14 @@ type Device struct {
 	Text     []string `json:"text,omitempty"`
 }
 
+func DefaultServices() []string {
+	return []string{
+		"_nv_shield_remote._tcp",
+		"_androidtvremote._tcp",
+		"_androidtvremote2._tcp",
+	}
+}
+
 func Scan(ctx context.Context, services []string, domain string) ([]Device, error) {
 	domain = normalizeDomain(domain)
 
