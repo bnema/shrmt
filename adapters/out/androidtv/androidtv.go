@@ -3,7 +3,7 @@ package androidtv
 import (
 	"context"
 	"fmt"
-	"time"
+	"sync"
 
 	"shrmt/core/action"
 	"shrmt/core/device"
@@ -12,7 +12,18 @@ import (
 	intatv "shrmt/internal/atvremote"
 )
 
-type Sender struct{}
+type Sender struct {
+	mu      sync.Mutex
+	session *intatv.Session
+	config  sessionConfig
+}
+
+type sessionConfig struct {
+	host     string
+	port     int
+	certPath string
+	keyPath  string
+}
 
 type Pairer struct {
 	PairingPort int
@@ -31,13 +42,7 @@ func (s *Sender) Send(ctx context.Context, target device.Target, creds pairing.C
 	if err != nil {
 		return remote.SendResult{}, err
 	}
-	result, err := intatv.SendKey(ctx, intatv.SendKeyParams{
-		Host:      target.Host,
-		Port:      target.Port,
-		CertPath:  creds.CertPath,
-		KeyPath:   creds.KeyPath,
-		PostDelay: 350 * time.Millisecond,
-	}, mapped)
+	result, err := s.sendWithPersistentSession(ctx, target, creds, mapped)
 	if err != nil {
 		return remote.SendResult{}, err
 	}
@@ -86,6 +91,65 @@ func (p *Pairer) Pair(ctx context.Context, req pairing.PairRequest) (pairing.Cre
 		KeyPath:  result.KeyPath,
 		Source:   "shrmt",
 	}, nil
+}
+
+func (s *Sender) sendWithPersistentSession(ctx context.Context, target device.Target, creds pairing.Credentials, mapped string) (*intatv.SendKeyResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	session, err := s.ensureSessionLocked(ctx, target, creds)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := session.SendKey(ctx, mapped)
+	if err == nil {
+		return result, nil
+	}
+	if ctx.Err() != nil {
+		return nil, err
+	}
+
+	s.closeSessionLocked()
+	session, reconnectErr := s.ensureSessionLocked(ctx, target, creds)
+	if reconnectErr != nil {
+		return nil, reconnectErr
+	}
+	return session.SendKey(ctx, mapped)
+}
+
+func (s *Sender) ensureSessionLocked(ctx context.Context, target device.Target, creds pairing.Credentials) (*intatv.Session, error) {
+	cfg := sessionConfig{
+		host:     target.Host,
+		port:     target.Port,
+		certPath: creds.CertPath,
+		keyPath:  creds.KeyPath,
+	}
+	if s.session != nil && s.config == cfg {
+		return s.session, nil
+	}
+
+	s.closeSessionLocked()
+	session, err := intatv.DialSession(ctx, intatv.SendKeyParams{
+		Host:     target.Host,
+		Port:     target.Port,
+		CertPath: creds.CertPath,
+		KeyPath:  creds.KeyPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+	s.session = session
+	s.config = cfg
+	return s.session, nil
+}
+
+func (s *Sender) closeSessionLocked() {
+	if s.session != nil {
+		s.session.Close()
+		s.session = nil
+	}
+	s.config = sessionConfig{}
 }
 
 func actionToAndroidTV(act action.Action) (string, error) {
