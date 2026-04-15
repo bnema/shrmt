@@ -66,6 +66,31 @@ func (s *Sender) Warmup(ctx context.Context, target device.Target, creds pairing
 	return err
 }
 
+func (s *Sender) Launch(ctx context.Context, target device.Target, creds pairing.Credentials, link string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	session, err := s.ensureSessionLocked(ctx, target, creds)
+	if err != nil {
+		return err
+	}
+
+	err = session.LaunchAppLink(ctx, link)
+	if err == nil {
+		return nil
+	}
+	if ctx.Err() != nil {
+		return err
+	}
+
+	s.closeSessionLocked()
+	session, reconnectErr := s.ensureSessionLocked(ctx, target, creds)
+	if reconnectErr != nil {
+		return reconnectErr
+	}
+	return session.LaunchAppLink(ctx, link)
+}
+
 func (p *Pairer) Pair(ctx context.Context, req pairing.PairRequest) (pairing.Credentials, error) {
 	port := p.PairingPort
 	if port == 0 {

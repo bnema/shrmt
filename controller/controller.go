@@ -47,3 +47,7 @@ func (c *Controller) Pair(ctx context.Context, req ports.PairRequest) (pairing.S
 func (c *Controller) Send(ctx context.Context, req ports.SendRequest) (remote.SendResult, error) {
 	return c.remote.Send(ctx, remote.SendInput{Target: req.Target, Action: req.Action})
 }
+
+func (c *Controller) Launch(ctx context.Context, req ports.LaunchRequest) error {
+	return c.remote.Launch(ctx, remote.LaunchInput{Target: req.Target, Link: req.Link})
+}

@@ -28,10 +28,16 @@ type SendRequest struct {
 	Action action.Action
 }
 
+type LaunchRequest struct {
+	Target *device.Target
+	Link   string
+}
+
 type Controller interface {
 	Load(ctx context.Context, req LoadRequest) (remote.State, error)
 	Discover(ctx context.Context) ([]device.Device, error)
 	SelectTarget(ctx context.Context, req SelectTargetRequest) error
 	Pair(ctx context.Context, req PairRequest) (pairing.State, error)
 	Send(ctx context.Context, req SendRequest) (remote.SendResult, error)
+	Launch(ctx context.Context, req LaunchRequest) error
 }

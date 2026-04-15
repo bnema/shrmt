@@ -31,6 +31,15 @@ const (
 	fallbackWindowHeight = 640
 )
 
+var appShortcuts = []struct {
+	Label string
+	Link  string
+}{
+	{Label: "YouTube", Link: "https://www.youtube.com/"},
+	{Label: "Twitch", Link: "https://www.twitch.tv/"},
+	{Label: "Plex", Link: "https://app.plex.tv/"},
+}
+
 type App struct {
 	controller ports.Controller
 	app        *pgtk.Application
@@ -208,6 +217,12 @@ func (a *App) buildUI() *pgtk.Box {
 	volumeRow.Append(&a.newActionButton("Vol+", action.VolumeUp).Widget)
 	root.Append(&volumeRow.Widget)
 
+	appsRow := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
+	for _, shortcut := range appShortcuts {
+		appsRow.Append(&a.newLaunchButton(shortcut.Label, shortcut.Link).Widget)
+	}
+	root.Append(&appsRow.Widget)
+
 	closeBtn := a.newButton("Close", func() { a.app.Quit() })
 	root.Append(&closeBtn.Widget)
 
@@ -216,6 +231,14 @@ func (a *App) buildUI() *pgtk.Box {
 
 func (a *App) newActionButton(label string, act action.Action) *pgtk.Button {
 	btn := a.newButton(label, func() { a.sendAsync(act) })
+	btn.SetHexpand(true)
+	btn.SetSizeRequest(88, 52)
+	a.actionButtons = append(a.actionButtons, btn)
+	return btn
+}
+
+func (a *App) newLaunchButton(label, link string) *pgtk.Button {
+	btn := a.newButton(label, func() { a.launchAsync(label, link) })
 	btn.SetHexpand(true)
 	btn.SetSizeRequest(88, 52)
 	a.actionButtons = append(a.actionButtons, btn)
@@ -401,6 +424,24 @@ func (a *App) sendAsync(act action.Action) {
 		a.actionQueueDepth.Add(-1)
 		a.setStatus("Action queue full")
 	}
+}
+
+func (a *App) launchAsync(label, link string) {
+	a.setBusy(true)
+	a.setStatus(fmt.Sprintf("Launching %s…", label))
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		err := a.controller.Launch(ctx, ports.LaunchRequest{Target: a.explicitTarget(), Link: link})
+		a.post(func() {
+			a.setBusy(false)
+			if err != nil {
+				a.setStatus(err.Error())
+				return
+			}
+			a.setStatus(fmt.Sprintf("Launched %s", label))
+		})
+	}()
 }
 
 func (a *App) explicitTarget() *device.Target {

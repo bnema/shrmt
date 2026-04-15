@@ -231,6 +231,14 @@ func (c *remoteClient) sendKey(key pb.RemoteKeyCode, direction pb.RemoteDirectio
 	})
 }
 
+func (c *remoteClient) sendAppLink(link string) error {
+	return c.writeMessage(&pb.RemoteMessage{
+		RemoteAppLinkLaunchRequest: &pb.RemoteAppLinkLaunchRequest{
+			AppLink: link,
+		},
+	})
+}
+
 func (c *remoteClient) close() {
 	_ = c.conn.Close()
 }

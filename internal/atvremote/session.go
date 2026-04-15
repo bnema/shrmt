@@ -121,6 +121,28 @@ func (s *Session) SendKeyWithDelay(ctx context.Context, action string, postDelay
 	}, nil
 }
 
+func (s *Session) LaunchAppLink(ctx context.Context, link string) error {
+	if s == nil || s.client == nil {
+		return errors.New("session is not connected")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if link == "" {
+		return errors.New("app link is required")
+	}
+	if err := s.client.getErr(); err != nil {
+		return err
+	}
+	if err := s.client.sendAppLink(link); err != nil {
+		return fmt.Errorf("launch app link: %w", err)
+	}
+	if err := s.client.getErr(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Session) Close() {
 	if s == nil || s.client == nil {
 		return

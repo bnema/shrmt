@@ -9,11 +9,19 @@ import (
 	"shrmt/core/pairing"
 )
 
-var ErrRemoteNotReady = errors.New("remote not ready")
+var (
+	ErrLaunchNotSupported = errors.New("launch not supported")
+	ErrRemoteNotReady     = errors.New("remote not ready")
+)
 
 type SendInput struct {
 	Target *device.Target
 	Action action.Action
+}
+
+type LaunchInput struct {
+	Target *device.Target
+	Link   string
 }
 
 type State struct {
@@ -38,14 +46,23 @@ type Warmupper interface {
 	Warmup(ctx context.Context, target device.Target, creds pairing.Credentials) error
 }
 
+type Launcher interface {
+	Launch(ctx context.Context, target device.Target, creds pairing.Credentials, link string) error
+}
+
 type Service struct {
-	devices *device.Service
-	pairing *pairing.Service
-	sender  Sender
+	devices  *device.Service
+	pairing  *pairing.Service
+	sender   Sender
+	launcher Launcher
 }
 
 func NewService(devices *device.Service, pairingSvc *pairing.Service, sender Sender) *Service {
-	return &Service{devices: devices, pairing: pairingSvc, sender: sender}
+	svc := &Service{devices: devices, pairing: pairingSvc, sender: sender}
+	if launcher, ok := any(sender).(Launcher); ok {
+		svc.launcher = launcher
+	}
+	return svc
 }
 
 func (s *Service) Load(ctx context.Context, explicit *device.Target) (State, error) {
@@ -85,16 +102,35 @@ func (s *Service) Send(ctx context.Context, input SendInput) (SendResult, error)
 	if s.sender == nil || s.devices == nil || s.pairing == nil {
 		return SendResult{}, ErrRemoteNotReady
 	}
-	target, err := s.devices.Resolve(ctx, input.Target)
+	target, creds, err := s.resolveTargetAndCredentials(ctx, input.Target)
 	if err != nil {
 		return SendResult{}, err
+	}
+	return s.sender.Send(ctx, target, creds, input.Action)
+}
+
+func (s *Service) Launch(ctx context.Context, input LaunchInput) error {
+	if s.launcher == nil || s.devices == nil || s.pairing == nil {
+		return ErrLaunchNotSupported
+	}
+	target, creds, err := s.resolveTargetAndCredentials(ctx, input.Target)
+	if err != nil {
+		return err
+	}
+	return s.launcher.Launch(ctx, target, creds, input.Link)
+}
+
+func (s *Service) resolveTargetAndCredentials(ctx context.Context, explicit *device.Target) (device.Target, pairing.Credentials, error) {
+	target, err := s.devices.Resolve(ctx, explicit)
+	if err != nil {
+		return device.Target{}, pairing.Credentials{}, err
 	}
 	creds, err := s.pairing.Credentials(ctx)
 	if err != nil {
 		if errors.Is(err, pairing.ErrCredentialsNotFound) {
-			return SendResult{}, pairing.ErrPairingRequired
+			return device.Target{}, pairing.Credentials{}, pairing.ErrPairingRequired
 		}
-		return SendResult{}, err
+		return device.Target{}, pairing.Credentials{}, err
 	}
-	return s.sender.Send(ctx, target, creds, input.Action)
+	return target, creds, nil
 }
