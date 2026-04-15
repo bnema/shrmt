@@ -58,12 +58,8 @@ See [`research/`](./research) for:
 - official references
 - exposed services and usability notes
 - APK reverse-engineering notes
-- sanitized live network findings
+- live network findings
 - POC plan
-
-## Privacy
-
-The published research is sanitized and avoids storing personal network identifiers, pairing codes, and local file paths.
 
 ## License
 
