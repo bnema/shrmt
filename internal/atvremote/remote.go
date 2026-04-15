@@ -241,11 +241,11 @@ func (c *remoteClient) handleIncoming(msg *pb.RemoteMessage) error {
 			RemoteConfigure: &pb.RemoteConfigure{
 				Code1: protoCode1,
 				DeviceInfo: &pb.RemoteDeviceInfo{
-					Model:       "shield-poc",
-					Vendor:      "shield-poc",
+					Model:       "shrmt",
+					Vendor:      "shrmt",
 					Unknown1:    1,
 					Unknown2:    "1",
-					PackageName: "shield-poc",
+					PackageName: "shrmt",
 					AppVersion:  "0.1.0",
 				},
 			},

@@ -1,5 +1,7 @@
 # Binaries
-shield-poc
+/shield-poc
+/shremote
+/shrmt
 /dist
 
 # Local captures / reverse-engineering artifacts

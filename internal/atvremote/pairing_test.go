@@ -28,7 +28,7 @@ func TestEnsureClientCertificate(t *testing.T) {
 	certPath := filepath.Join(dir, "client-cert.pem")
 	keyPath := filepath.Join(dir, "client-key.pem")
 
-	if err := EnsureClientCertificate(certPath, keyPath, "shield-poc-test"); err != nil {
+	if err := EnsureClientCertificate(certPath, keyPath, "shrmt-test"); err != nil {
 		t.Fatalf("EnsureClientCertificate returned error: %v", err)
 	}
 
@@ -49,8 +49,8 @@ func TestEnsureClientCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseCertificate returned error: %v", err)
 	}
-	if cert.Subject.CommonName != "shield-poc-test" {
-		t.Fatalf("certificate common name = %q, want %q", cert.Subject.CommonName, "shield-poc-test")
+	if cert.Subject.CommonName != "shrmt-test" {
+		t.Fatalf("certificate common name = %q, want %q", cert.Subject.CommonName, "shrmt-test")
 	}
 
 	keyBlock, _ := pem.Decode(keyPEM)

@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	atvpb "shield-poc/internal/atvremote/proto"
+	atvpb "shrmt/internal/atvremote/proto"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
@@ -61,7 +61,7 @@ func normalizePairParams(params PairParams) PairParams {
 		params.Port = DefaultPairingPort
 	}
 	if params.ClientName == "" {
-		params.ClientName = "shield-poc"
+		params.ClientName = "shrmt"
 	}
 	if params.ServiceName == "" {
 		params.ServiceName = DefaultServiceName

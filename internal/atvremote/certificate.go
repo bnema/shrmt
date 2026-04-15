@@ -55,7 +55,7 @@ func EnsureClientCertificate(certPath, keyPath, clientName string) error {
 
 func generateSelfSignedCertificate(clientName string) ([]byte, []byte, error) {
 	if clientName == "" {
-		clientName = "shield-poc"
+		clientName = "shrmt"
 	}
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
