@@ -1,66 +1,92 @@
-# shield-poc
+# shrmt
 
-Small Go proof of concept for discovering, pairing with, and controlling an NVIDIA SHIELD TV from Linux.
+`shrmt` is a GTK4 + layer-shell NVIDIA SHIELD remote built on top of the Android TV Remote v2 path already proven in this repository.
 
-## What works
+## Current shape
 
-- discover SHIELD / Android TV services on the local network
-- probe exposed endpoints and TLS behavior
-- pair with Android TV Remote v2
-- send basic commands like `home` and `power`
+- `core/`
+  - domain/business packages: `action`, `device`, `pairing`, `remote`
+- `ports/`
+  - inbound controller contract used by CLI and GTK
+- `controller/`
+  - thin composition/orchestration layer
+- `adapters/in/`
+  - `cli`, `gtk`
+- `adapters/out/`
+  - `androidtv`, `zeroconf`, `xdg`
 
-## Quick start
+The older POC transport code still lives under `internal/atvremote` and `internal/discovery`, and is now wrapped by the outbound adapters.
 
-Build:
+## Runtime dependencies
+
+Wayland overlay mode needs:
+
+- `gtk4`
+- `gtk4-layer-shell`
+
+Arch:
+
+```bash
+sudo pacman -S gtk4 gtk4-layer-shell
+```
+
+## Build
 
 ```bash
 go build ./...
 ```
 
-Discover devices:
+## Run
+
+Launch the GTK remote:
 
 ```bash
-go run . discover --timeout 5s
+go run ./cmd/shrmt
 ```
 
-Probe endpoints:
+Use the CLI:
 
 ```bash
-go run . probe --timeout 5s
+go run ./cmd/shrmt discover
+go run ./cmd/shrmt pair --host <shield-ip>
+go run ./cmd/shrmt key home --host <shield-ip>
+go run ./cmd/shrmt power --host <shield-ip>
 ```
 
-Pair:
+## Credentials and target storage
 
-```bash
-go run . pair
-```
+`shrmt` uses:
 
-Send a key:
+- `~/.config/shrmt/androidtv-client-cert.pem`
+- `~/.config/shrmt/androidtv-client-key.pem`
+- `~/.config/shrmt/target.json`
 
-```bash
-go run . key home
-go run . power
-```
+It also falls back to legacy credentials and target config in:
 
-## Credentials
-
-Pairing credentials are stored locally in your user config directory, for example:
-
+- `~/.config/shremote/androidtv-client-cert.pem`
+- `~/.config/shremote/androidtv-client-key.pem`
+- `~/.config/shremote/target.json`
 - `~/.config/shield-poc/androidtv-client-cert.pem`
 - `~/.config/shield-poc/androidtv-client-key.pem`
 
-These files are local-only and should not be committed.
+## Niri example
 
-## Research docs
+```kdl
+Mod+Ctrl+S hotkey-overlay-title="NVIDIA Shield: shrmt" { spawn "shrmt"; }
+```
 
-See [`research/`](./research) for:
+This matches the same hotkey-launched overlay style already used for `dumber omnibox` and `sekeve omnibox`.
 
-- official references
-- exposed services and usability notes
-- APK reverse-engineering notes
-- live network findings
-- POC plan
+## Testing
 
-## License
+```bash
+make test
+```
 
-MIT — see [`LICENSE`](./LICENSE).
+## Mocks
+
+Mockery v3 config lives in `.mockery.yaml`.
+
+```bash
+make mock
+```

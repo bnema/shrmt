@@ -1,8 +1,9 @@
-module shield-poc
+module shrmt
 
 go 1.26.2
 
 require (
+	github.com/bnema/puregotk v0.0.0
 	github.com/drosocode/atvremote v0.1.3
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/spf13/cobra v1.10.2
@@ -10,6 +11,7 @@ require (
 )
 
 require (
+	github.com/bnema/purego v0.11.0-bnema.2 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/miekg/dns v1.1.27 // indirect
@@ -19,3 +21,5 @@ require (
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 )
+
+replace github.com/bnema/puregotk => ../puregotk

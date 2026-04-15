@@ -1,0 +1,34 @@
+template: testify
+template-data:
+  unroll-variadic: true
+packages:
+  shrmt/ports:
+    config:
+      dir: '{{.InterfaceDir}}/mocks'
+      filename: mocks.go
+      pkgname: mocks
+    interfaces:
+      Controller: {}
+  shrmt/core/device:
+    config:
+      dir: '{{.InterfaceDir}}/mocks'
+      filename: mocks.go
+      pkgname: mocks
+    interfaces:
+      Discoverer: {}
+      TargetStore: {}
+  shrmt/core/pairing:
+    config:
+      dir: '{{.InterfaceDir}}/mocks'
+      filename: mocks.go
+      pkgname: mocks
+    interfaces:
+      Pairer: {}
+      CredentialStore: {}
+  shrmt/core/remote:
+    config:
+      dir: '{{.InterfaceDir}}/mocks'
+      filename: mocks.go
+      pkgname: mocks
+    interfaces:
+      Sender: {}
