@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"shrmt/core/action"
@@ -42,8 +43,10 @@ type App struct {
 	statusLabel   *pgtk.Label
 	targetLabel   *pgtk.Label
 
-	actionButtons []*pgtk.Button
-	callbacks     []interface{}
+	actionButtons    []*pgtk.Button
+	actionQueue      chan action.Action
+	actionQueueDepth atomic.Int64
+	callbacks        []interface{}
 }
 
 func Run(ctrl ports.Controller) int {
@@ -51,7 +54,8 @@ func Run(ctrl ports.Controller) int {
 	id := appID
 	app := pgtk.NewApplication(&id, gio.GApplicationDefaultFlagsValue)
 	defer app.Unref()
-	ui := &App{controller: ctrl, app: app}
+	ui := &App{controller: ctrl, app: app, actionQueue: make(chan action.Action, 64)}
+	ui.startActionWorker()
 	activate := func(_ gio.Application) { ui.activate() }
 	ui.retain(activate)
 	app.ConnectActivate(&activate)
@@ -381,25 +385,22 @@ func (a *App) pairAsync() {
 }
 
 func (a *App) sendAsync(act action.Action) {
-	a.setBusy(true)
-	a.setStatus(fmt.Sprintf("Sending %s…", act))
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		result, err := a.controller.Send(ctx, ports.SendRequest{Target: a.explicitTarget(), Action: act})
-		a.post(func() {
-			a.setBusy(false)
-			if err != nil {
-				a.setStatus(err.Error())
-				return
-			}
-			status := fmt.Sprintf("Sent %s", result.Action)
-			if result.Powered != nil {
-				status += fmt.Sprintf(" · power=%t", *result.Powered)
-			}
-			a.setStatus(status)
-		})
-	}()
+	if a.actionQueue == nil {
+		a.setStatus("Action queue unavailable")
+		return
+	}
+	depth := a.actionQueueDepth.Add(1)
+	select {
+	case a.actionQueue <- act:
+		if depth == 1 {
+			a.setStatus(fmt.Sprintf("Queued %s", act))
+		} else {
+			a.setStatus(fmt.Sprintf("Queued %s · %d pending", act, depth))
+		}
+	default:
+		a.actionQueueDepth.Add(-1)
+		a.setStatus("Action queue full")
+	}
 }
 
 func (a *App) explicitTarget() *device.Target {
@@ -460,6 +461,48 @@ func (a *App) setBusy(busy bool) {
 	for _, btn := range a.actionButtons {
 		btn.SetSensitive(!busy)
 	}
+}
+
+func (a *App) startActionWorker() {
+	if a.actionQueue == nil {
+		return
+	}
+	go func() {
+		for act := range a.actionQueue {
+			pending := a.actionQueueDepth.Load()
+			a.post(func() {
+				status := fmt.Sprintf("Sending %s…", act)
+				if pending > 1 {
+					status += fmt.Sprintf(" · %d queued", pending-1)
+				}
+				a.setStatus(status)
+			})
+
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			result, err := a.controller.Send(ctx, ports.SendRequest{Target: a.explicitTarget(), Action: act})
+			cancel()
+
+			remaining := a.actionQueueDepth.Add(-1)
+			a.post(func() {
+				if err != nil {
+					status := err.Error()
+					if remaining > 0 {
+						status += fmt.Sprintf(" · %d queued", remaining)
+					}
+					a.setStatus(status)
+					return
+				}
+				status := fmt.Sprintf("Sent %s", result.Action)
+				if result.Powered != nil {
+					status += fmt.Sprintf(" · power=%t", *result.Powered)
+				}
+				if remaining > 0 {
+					status += fmt.Sprintf(" · %d queued", remaining)
+				}
+				a.setStatus(status)
+			})
+		}
+	}()
 }
 
 func (a *App) setStatus(text string) {
