@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -203,5 +204,5 @@ func joinErrors(errs []error) error {
 	for _, err := range filtered {
 		parts = append(parts, err.Error())
 	}
-	return fmt.Errorf(strings.Join(parts, "; "))
+	return errors.New(strings.Join(parts, "; "))
 }

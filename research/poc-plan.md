@@ -37,10 +37,17 @@ Why this matters:
 
 ## Phase 2 — standard Android TV path
 
+Status: **started**
+
 Goals:
 - pair against Android TV Remote v2
 - validate basic remote commands from Go
 - confirm minimal useful feature set
+
+Implemented so far:
+- local client certificate generation
+- Android TV Remote v2 pairing protobufs
+- certificate-based TLS pairing CLI command
 
 Target capabilities:
 - home
