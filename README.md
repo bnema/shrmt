@@ -1,98 +1,70 @@
 # shield-poc
 
-Research-driven proof of concept for controlling an NVIDIA SHIELD TV from a Linux desktop.
+Small Go proof of concept for discovering, pairing with, and controlling an NVIDIA SHIELD TV from Linux.
 
-## Goals
+## What works
 
-- document the protocol landscape around NVIDIA SHIELD TV remote control
-- identify what is already covered by Android TV / Google TV standards
-- reverse engineer only what is necessary for interoperability
-- build a small Go CLI using **Go 1.26.2** and **Cobra**
+- discover SHIELD / Android TV services on the local network
+- probe exposed endpoints and TLS behavior
+- pair with Android TV Remote v2
+- send basic commands like `home` and `power`
 
-## Current status
+## Quick start
 
-This repository currently contains:
-
-- shareable research notes under [`research/`](./research)
-- a discovery CLI that can browse likely SHIELD / Android TV mDNS services
-- a probe CLI that can test discovered endpoints for TCP and TLS availability
-- an Android TV Remote v2 pairing CLI for generating local client credentials and initiating TV pairing
-- basic Android TV Remote v2 command support for `key` and `power`
-
-## Documentation index
-
-- [`research/README.md`](./research/README.md) — research index
-- [`research/official-references.md`](./research/official-references.md) — official Android / AOSP references
-- [`research/exposed-surfaces.md`](./research/exposed-surfaces.md) — what is exposed, what is usable, and what remains inferred
-- [`research/nvidia-shield-tv-apk-notes.md`](./research/nvidia-shield-tv-apk-notes.md) — APK reverse-engineering notes
-- [`research/live-network-findings.md`](./research/live-network-findings.md) — sanitized live discovery / TLS findings
-- [`research/poc-plan.md`](./research/poc-plan.md) — phased implementation plan
-- [`research/apk/README.md`](./research/apk/README.md) — handling rules for APK-related artifacts
-
-## Sanitization policy
-
-This repository is intended to be shareable.
-
-The published notes intentionally avoid storing:
-
-- private LAN IP addresses
-- device-specific hostnames where avoidable
-- full certificate fingerprints
-- Bluetooth MAC addresses
-- captured pairing codes
-- personal APK download paths
-- raw packet captures or pairing material
-
-Examples use placeholders or redacted values when needed.
-
-## Tiny CLI
-
-The current CLI supports discovery, probing, Android TV Remote v2 pairing, and a minimal command surface.
-
-```bash
-rtk proxy go run . discover --timeout 5s
-rtk proxy go run . probe --timeout 5s
-rtk proxy go run . pair
-rtk proxy go run . key home
-rtk proxy go run . power
-```
-
-Example discovery output shape:
-
-```text
-service=_androidtvremote2._tcp instance="<device-name>" host=<host>.local port=6466
-  ipv4: <redacted>
-  txt:  bt=<redacted>
-
-service=_nv_shield_remote._tcp instance="<device-name>" host=<host>.local port=8987
-  ipv4: <redacted>
-  txt:  SERVER=<redacted>, SERVER_CAPABILITY=<value>
-```
-
-Example probe output shape:
-
-```text
-target=<redacted>:6466 service=_androidtvremote2._tcp instance="<device-name>"
-  tcp: true
-  tls: true protocol=TLS1.3 cipher=TLS_AES_256_GCM_SHA384
-  cert_common_name: <redacted>
-  cert_self_signed: true
-```
-
-Pairing credentials default to your user config directory, for example:
-
-- `~/.config/shield-poc/androidtv-client-cert.pem`
-- `~/.config/shield-poc/androidtv-client-key.pem`
-
-## Build
+Build:
 
 ```bash
 rtk proxy go build ./...
 ```
 
-## Next steps
+Discover devices:
 
-1. keep polishing public research docs
-2. validate `power` behavior on hardware as the POC finish line
-3. expand the basic command surface if needed: back, d-pad, select, volume
-4. investigate the proprietary NVIDIA `nvbeyonder` path for SHIELD-specific features
+```bash
+rtk proxy go run . discover --timeout 5s
+```
+
+Probe endpoints:
+
+```bash
+rtk proxy go run . probe --timeout 5s
+```
+
+Pair:
+
+```bash
+rtk proxy go run . pair
+```
+
+Send a key:
+
+```bash
+rtk proxy go run . key home
+rtk proxy go run . power
+```
+
+## Credentials
+
+Pairing credentials are stored locally in your user config directory, for example:
+
+- `~/.config/shield-poc/androidtv-client-cert.pem`
+- `~/.config/shield-poc/androidtv-client-key.pem`
+
+These files are local-only and should not be committed.
+
+## Research docs
+
+See [`research/`](./research) for:
+
+- official references
+- exposed services and usability notes
+- APK reverse-engineering notes
+- sanitized live network findings
+- POC plan
+
+## Privacy
+
+The published research is sanitized and avoids storing personal network identifiers, pairing codes, and local file paths.
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).
