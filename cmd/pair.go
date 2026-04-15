@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"shield-poc/internal/atvremote"
-	"shield-poc/internal/discovery"
 
 	"github.com/spf13/cobra"
 )
@@ -90,39 +89,14 @@ func init() {
 }
 
 func resolvePairTarget(parent context.Context) (string, int, error) {
-	if strings.TrimSpace(pairHost) != "" {
-		return strings.TrimSpace(pairHost), pairPort, nil
-	}
-	if !pairDiscover {
-		return "", 0, errors.New("host is required when discovery is disabled")
-	}
-
-	ctx, cancel := context.WithTimeout(parent, pairDiscoveryWait)
-	defer cancel()
-
-	devices, err := discovery.Scan(ctx, []string{"_androidtvremote2._tcp"}, "local")
+	target, err := resolveAndroidTVRemoteTarget(parent, pairHost, pairPort, pairDiscover, pairDiscoveryWait)
 	if err != nil {
 		return "", 0, err
 	}
-	if len(devices) == 0 {
-		return "", 0, errors.New("no _androidtvremote2._tcp devices found")
+	if target.Device != nil {
+		fmt.Printf("Using discovered Android TV target %q at %s:%d\n", target.Device.Instance, target.Host, target.Port)
 	}
-	if len(devices) > 1 {
-		return "", 0, fmt.Errorf("multiple Android TV Remote v2 devices found (%d); pass --host explicitly", len(devices))
-	}
-
-	device := devices[0]
-	addresses := append([]string(nil), device.IPv4...)
-	addresses = append(addresses, device.IPv6...)
-	if len(addresses) == 0 {
-		if device.HostName == "" {
-			return "", 0, errors.New("discovered device has no usable address")
-		}
-		addresses = append(addresses, device.HostName)
-	}
-
-	fmt.Printf("Using discovered Android TV target %q at %s:%d\n", device.Instance, addresses[0], pairPort)
-	return addresses[0], pairPort, nil
+	return target.Host, target.Port, nil
 }
 
 func promptPairCode(r io.Reader) (string, error) {

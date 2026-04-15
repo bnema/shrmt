@@ -17,6 +17,7 @@ This repository currently contains:
 - a discovery CLI that can browse likely SHIELD / Android TV mDNS services
 - a probe CLI that can test discovered endpoints for TCP and TLS availability
 - an Android TV Remote v2 pairing CLI for generating local client credentials and initiating TV pairing
+- basic Android TV Remote v2 command support for `key` and `power`
 
 ## Documentation index
 
@@ -45,12 +46,14 @@ Examples use placeholders or redacted values when needed.
 
 ## Tiny CLI
 
-The current CLI supports discovery, probing, and Android TV Remote v2 pairing.
+The current CLI supports discovery, probing, Android TV Remote v2 pairing, and a minimal command surface.
 
 ```bash
 rtk proxy go run . discover --timeout 5s
 rtk proxy go run . probe --timeout 5s
 rtk proxy go run . pair
+rtk proxy go run . key home
+rtk proxy go run . power
 ```
 
 Example discovery output shape:
@@ -89,6 +92,6 @@ rtk proxy go build ./...
 ## Next steps
 
 1. keep polishing public research docs
-2. validate the Android TV Remote v2 pairing flow on hardware
-3. implement basic commands: home, back, d-pad, select, power
+2. validate `power` behavior on hardware as the POC finish line
+3. expand the basic command surface if needed: back, d-pad, select, volume
 4. investigate the proprietary NVIDIA `nvbeyonder` path for SHIELD-specific features

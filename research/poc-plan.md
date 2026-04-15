@@ -48,6 +48,8 @@ Implemented so far:
 - local client certificate generation
 - Android TV Remote v2 pairing protobufs
 - certificate-based TLS pairing CLI command
+- initial remote command flow on the Android TV Remote v2 port
+- basic `key` / `power` CLI commands
 
 Target capabilities:
 - home
@@ -57,6 +59,11 @@ Target capabilities:
 - play / pause
 - volume if supported
 - power / sleep if supported
+
+Validated so far:
+- pairing
+- `key home`
+- command-channel handshake on the remote port
 
 Why this first:
 - likely less proprietary
