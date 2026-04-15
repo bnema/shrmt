@@ -90,7 +90,8 @@ func (s *Service) Load(ctx context.Context, explicit *device.Target) (State, err
 	}
 	state.Target = target
 	state.HasTarget = !target.IsZero()
-	if state.HasTarget && state.Pairing.Available {
+	warmTarget := explicit != nil || state.SavedTarget
+	if warmTarget && state.HasTarget && state.Pairing.Available {
 		if warmupper, ok := s.sender.(Warmupper); ok {
 			_ = warmupper.Warmup(ctx, target, state.Pairing.Credentials)
 		}

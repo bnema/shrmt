@@ -14,12 +14,11 @@ import (
 	"shrmt/core/device"
 	"shrmt/core/pairing"
 	"shrmt/core/remote"
-	intatv "shrmt/internal/atvremote"
 )
 
 const (
 	clientName  = "shrmt"
-	serviceName = intatv.DefaultServiceName
+	serviceName = androidtv.DefaultServiceName
 )
 
 func main() {
@@ -38,7 +37,7 @@ func main() {
 func buildController() *controller.Controller {
 	discoverer := zeroconf.New("local")
 	targetStore := xdgstore.NewTargetStore()
-	deviceService := device.NewService(discoverer, targetStore, intatv.DefaultRemotePort)
+	deviceService := device.NewService(discoverer, targetStore, androidtv.DefaultRemotePort)
 	credentialStore := xdgstore.NewCredentialStore()
 	pairingService := pairing.NewService(androidtv.NewPairer(), credentialStore, clientName, serviceName)
 	remoteService := remote.NewService(deviceService, pairingService, androidtv.NewSender())

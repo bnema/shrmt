@@ -53,9 +53,14 @@ type App struct {
 	targetLabel   *pgtk.Label
 
 	actionButtons    []*pgtk.Button
-	actionQueue      chan action.Action
+	actionQueue      chan queuedAction
 	actionQueueDepth atomic.Int64
 	callbacks        []interface{}
+}
+
+type queuedAction struct {
+	action action.Action
+	target *device.Target
 }
 
 func Run(ctrl ports.Controller) int {
@@ -63,7 +68,7 @@ func Run(ctrl ports.Controller) int {
 	id := appID
 	app := pgtk.NewApplication(&id, gio.GApplicationDefaultFlagsValue)
 	defer app.Unref()
-	ui := &App{controller: ctrl, app: app, actionQueue: make(chan action.Action, 64)}
+	ui := &App{controller: ctrl, app: app, actionQueue: make(chan queuedAction, 64)}
 	ui.startActionWorker()
 	activate := func(_ gio.Application) { ui.activate() }
 	ui.retain(activate)
@@ -309,11 +314,12 @@ func (a *App) installKeyController(window *pgtk.ApplicationWindow) {
 }
 
 func (a *App) refreshStateAsync() {
+	target := a.explicitTarget()
 	a.setBusy(true)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		state, err := a.controller.Load(ctx, ports.LoadRequest{Target: a.explicitTarget()})
+		state, err := a.controller.Load(ctx, ports.LoadRequest{Target: target})
 		a.post(func() {
 			a.setBusy(false)
 			if err != nil {
@@ -343,11 +349,16 @@ func (a *App) discoverAsync() {
 				return
 			}
 			if len(devices) == 1 {
-				target, err := device.TargetFromDevice(devices[0], 6466)
-				if err == nil {
-					a.hostEntry.SetText(target.Host)
-					_ = a.controller.SelectTarget(context.Background(), ports.SelectTargetRequest{Target: target})
+				target, err := device.TargetFromDevice(devices[0], 0)
+				if err != nil {
+					a.setStatus(err.Error())
+					return
 				}
+				if err := a.controller.SelectTarget(context.Background(), ports.SelectTargetRequest{Target: target}); err != nil {
+					a.setStatus(err.Error())
+					return
+				}
+				a.hostEntry.SetText(target.Host)
 				a.setStatus(fmt.Sprintf("Discovered %s", firstNonEmpty(devices[0].Instance, devices[0].HostName, targetLabel(target))))
 				a.refreshStateAsync()
 				return
@@ -388,12 +399,13 @@ func (a *App) pairAsync() {
 		a.setStatus(err.Error())
 		return
 	}
+	target := a.explicitTarget()
 	a.setBusy(true)
 	a.setStatus("Pairing… check the TV")
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		state, err := a.controller.Pair(ctx, ports.PairRequest{Target: a.explicitTarget(), Code: code})
+		state, err := a.controller.Pair(ctx, ports.PairRequest{Target: target, Code: code})
 		a.post(func() {
 			a.setBusy(false)
 			if err != nil {
@@ -412,9 +424,10 @@ func (a *App) sendAsync(act action.Action) {
 		a.setStatus("Action queue unavailable")
 		return
 	}
+	target := a.explicitTarget()
 	depth := a.actionQueueDepth.Add(1)
 	select {
-	case a.actionQueue <- act:
+	case a.actionQueue <- queuedAction{action: act, target: target}:
 		if depth == 1 {
 			a.setStatus(fmt.Sprintf("Queued %s", act))
 		} else {
@@ -427,12 +440,13 @@ func (a *App) sendAsync(act action.Action) {
 }
 
 func (a *App) launchAsync(label, link string) {
+	target := a.explicitTarget()
 	a.setBusy(true)
 	a.setStatus(fmt.Sprintf("Launching %s…", label))
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		err := a.controller.Launch(ctx, ports.LaunchRequest{Target: a.explicitTarget(), Link: link})
+		err := a.controller.Launch(ctx, ports.LaunchRequest{Target: target, Link: link})
 		a.post(func() {
 			a.setBusy(false)
 			if err != nil {
@@ -452,7 +466,7 @@ func (a *App) explicitTarget() *device.Target {
 	if host == "" {
 		return nil
 	}
-	port := 6466
+	port := 0
 	if parsedHost, parsedPort, err := hostPort(host); err == nil {
 		host = parsedHost
 		port = parsedPort
@@ -509,10 +523,10 @@ func (a *App) startActionWorker() {
 		return
 	}
 	go func() {
-		for act := range a.actionQueue {
+		for queued := range a.actionQueue {
 			pending := a.actionQueueDepth.Load()
 			a.post(func() {
-				status := fmt.Sprintf("Sending %s…", act)
+				status := fmt.Sprintf("Sending %s…", queued.action)
 				if pending > 1 {
 					status += fmt.Sprintf(" · %d queued", pending-1)
 				}
@@ -520,7 +534,7 @@ func (a *App) startActionWorker() {
 			})
 
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			result, err := a.controller.Send(ctx, ports.SendRequest{Target: a.explicitTarget(), Action: act})
+			result, err := a.controller.Send(ctx, ports.SendRequest{Target: queued.target, Action: queued.action})
 			cancel()
 
 			remaining := a.actionQueueDepth.Add(-1)
