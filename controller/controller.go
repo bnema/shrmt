@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	"shrmt/core/device"
 	"shrmt/core/pairing"
@@ -40,7 +41,9 @@ func (c *Controller) Pair(ctx context.Context, req ports.PairRequest) (pairing.S
 	if err != nil {
 		return pairing.State{}, err
 	}
-	_ = c.devices.SaveDefault(ctx, target)
+	if err := c.devices.SaveDefault(ctx, target); err != nil {
+		return state, fmt.Errorf("save default target: %w", err)
+	}
 	return state, nil
 }
 

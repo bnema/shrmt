@@ -33,8 +33,18 @@ sudo pacman -S gtk4 gtk4-layer-shell
 ## Build
 
 ```bash
-go build ./...
+make build
 ```
+
+This writes the binary to `./bin/shrmt`.
+
+## Install
+
+```bash
+make install
+```
+
+This installs `shrmt` to `~/.local/bin/shrmt` by default.
 
 ## Run
 

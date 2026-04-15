@@ -12,6 +12,12 @@ import (
 	intatv "shrmt/internal/atvremote"
 )
 
+const (
+	DefaultRemotePort  = intatv.DefaultRemotePort
+	DefaultPairingPort = intatv.DefaultPairingPort
+	DefaultServiceName = intatv.DefaultServiceName
+)
+
 type Sender struct {
 	mu      sync.Mutex
 	session *intatv.Session
@@ -34,7 +40,7 @@ func NewSender() *Sender {
 }
 
 func NewPairer() *Pairer {
-	return &Pairer{PairingPort: intatv.DefaultPairingPort}
+	return &Pairer{PairingPort: DefaultPairingPort}
 }
 
 func (s *Sender) Send(ctx context.Context, target device.Target, creds pairing.Credentials, act action.Action) (remote.SendResult, error) {
@@ -94,7 +100,7 @@ func (s *Sender) Launch(ctx context.Context, target device.Target, creds pairing
 func (p *Pairer) Pair(ctx context.Context, req pairing.PairRequest) (pairing.Credentials, error) {
 	port := p.PairingPort
 	if port == 0 {
-		port = intatv.DefaultPairingPort
+		port = DefaultPairingPort
 	}
 	params := intatv.PairParams{
 		Host:        req.Target.Host,

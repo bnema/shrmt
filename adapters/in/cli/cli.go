@@ -112,7 +112,7 @@ func newPairCommand(ctrl ports.Controller) *cobra.Command {
 	}
 	cmd.Flags().DurationVar(&timeout, "timeout", 20*time.Second, "pairing timeout")
 	cmd.Flags().StringVar(&host, "host", "", "explicit host or IP")
-	cmd.Flags().IntVar(&port, "port", 6466, "remote command port")
+	cmd.Flags().IntVar(&port, "port", 0, "remote command port")
 	cmd.Flags().StringVar(&code, "code", "", "6-character hex pairing code")
 	return cmd
 }
@@ -146,7 +146,7 @@ func newKeyCommand(ctrl ports.Controller) *cobra.Command {
 	}
 	cmd.Flags().DurationVar(&timeout, "timeout", 10*time.Second, "command timeout")
 	cmd.Flags().StringVar(&host, "host", "", "explicit host or IP")
-	cmd.Flags().IntVar(&port, "port", 6466, "remote command port")
+	cmd.Flags().IntVar(&port, "port", 0, "remote command port")
 	return cmd
 }
 
@@ -174,7 +174,7 @@ func newPowerCommand(ctrl ports.Controller) *cobra.Command {
 	}
 	cmd.Flags().DurationVar(&timeout, "timeout", 10*time.Second, "command timeout")
 	cmd.Flags().StringVar(&host, "host", "", "explicit host or IP")
-	cmd.Flags().IntVar(&port, "port", 6466, "remote command port")
+	cmd.Flags().IntVar(&port, "port", 0, "remote command port")
 	return cmd
 }
 
