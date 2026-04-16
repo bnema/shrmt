@@ -19,8 +19,6 @@ const (
 	keyFile    = "androidtv-client-key.pem"
 )
 
-var legacyConfigDirNames = []string{"shremote", "shield-poc"}
-
 type CredentialStore struct{}
 
 type TargetStore struct{}
@@ -51,23 +49,6 @@ func (s *CredentialStore) Load(ctx context.Context) (pairing.Credentials, error)
 		return primary, nil
 	}
 
-	for _, legacyDirName := range legacyConfigDirNames {
-		legacyBase, err := configPath(legacyDirName)
-		if err != nil {
-			return pairing.Credentials{}, err
-		}
-		legacy := pairing.Credentials{
-			CertPath: filepath.Join(legacyBase, certFile),
-			KeyPath:  filepath.Join(legacyBase, keyFile),
-			Source:   legacyDirName,
-		}
-		if ok, err := s.Exists(ctx, legacy); err != nil {
-			return pairing.Credentials{}, err
-		} else if ok {
-			return legacy, nil
-		}
-	}
-
 	return pairing.Credentials{}, pairing.ErrCredentialsNotFound
 }
 
@@ -87,28 +68,25 @@ func (s *CredentialStore) Exists(_ context.Context, creds pairing.Credentials) (
 }
 
 func (s *TargetStore) Load(context.Context) (device.Target, error) {
-	paths, err := targetPaths()
+	path, err := targetPath()
 	if err != nil {
 		return device.Target{}, err
 	}
-	for _, path := range paths {
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				continue
-			}
-			return device.Target{}, fmt.Errorf("read target: %w", err)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return device.Target{}, device.ErrNoSavedTarget
 		}
-		var target device.Target
-		if err := json.Unmarshal(raw, &target); err != nil {
-			return device.Target{}, fmt.Errorf("decode target: %w", err)
-		}
-		if target.IsZero() {
-			continue
-		}
-		return target, nil
+		return device.Target{}, fmt.Errorf("read target: %w", err)
 	}
-	return device.Target{}, device.ErrNoSavedTarget
+	var target device.Target
+	if err := json.Unmarshal(raw, &target); err != nil {
+		return device.Target{}, fmt.Errorf("decode target: %w", err)
+	}
+	if target.IsZero() {
+		return device.Target{}, device.ErrNoSavedTarget
+	}
+	return target, nil
 }
 
 func (s *TargetStore) Save(_ context.Context, target device.Target) error {
@@ -146,23 +124,6 @@ func targetPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(base, targetFile), nil
-}
-
-func targetPaths() ([]string, error) {
-	paths := make([]string, 0, 1+len(legacyConfigDirNames))
-	primary, err := targetPath()
-	if err != nil {
-		return nil, err
-	}
-	paths = append(paths, primary)
-	for _, legacyDirName := range legacyConfigDirNames {
-		base, err := configPath(legacyDirName)
-		if err != nil {
-			return nil, err
-		}
-		paths = append(paths, filepath.Join(base, targetFile))
-	}
-	return paths, nil
 }
 
 func configPath(appName string) (string, error) {
