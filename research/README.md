@@ -1,6 +1,6 @@
 # Research index
 
-This directory contains shareable research notes for the NVIDIA SHIELD TV control POC.
+This directory contains historical research notes and background material for shrmt.
 
 ## Documents
 
@@ -12,8 +12,8 @@ This directory contains shareable research notes for the NVIDIA SHIELD TV contro
   - findings from static inspection of the NVIDIA SHIELD TV Android app
 - [`live-network-findings.md`](./live-network-findings.md)
   - sanitized results from local-network discovery and TLS probing
-- [`poc-plan.md`](./poc-plan.md)
-  - implementation phases and recommended order of work
+- [`roadmap.md`](./roadmap.md)
+  - historical implementation roadmap and notes
 - [`apk/README.md`](./apk/README.md)
   - guidance for handling APK artifacts safely in an open repository
 

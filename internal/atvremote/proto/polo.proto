@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package polo.wire.protobuf;
 
-option go_package = "shield-poc/internal/atvremote/proto;atvpb";
+option go_package = "shrmt/internal/atvremote/proto;atvpb";
 option java_outer_classname = "PoloProto";
 option java_package = "com.google.polo.wire.protobuf";
 option optimize_for = LITE_RUNTIME;

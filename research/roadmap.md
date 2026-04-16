@@ -1,4 +1,6 @@
-# POC plan
+# Historical implementation roadmap
+
+This document records the original implementation roadmap and notes for shrmt.
 
 ## Principles
 
@@ -9,7 +11,7 @@
 
 ## Phase 1 — discovery
 
-Status: **in progress / partially implemented**
+Status at the time: **in progress / partially implemented**
 
 Goals:
 - scan likely mDNS services
@@ -24,7 +26,7 @@ Candidate services:
 
 ## Phase 1.5 — endpoint probing
 
-Status: **implemented as an early CLI command**
+Status at the time: **implemented as an early CLI command**
 
 Goals:
 - verify that discovered endpoints are reachable
@@ -37,7 +39,7 @@ Why this matters:
 
 ## Phase 2 — standard Android TV path
 
-Status: **started**
+Status at the time: **started**
 
 Goals:
 - pair against Android TV Remote v2

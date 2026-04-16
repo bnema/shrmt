@@ -759,7 +759,7 @@ const file_internal_atvremote_proto_polo_proto_rawDesc = "" +
 	"\x06secret\x18\x01 \x02(\fR\x06secret\"#\n" +
 	"\tSecretAck\x12\x16\n" +
 	"\x06secret\x18\x01 \x02(\fR\x06secretBW\n" +
-	"\x1dcom.google.polo.wire.protobufB\tPoloProtoH\x03Z)shield-poc/internal/atvremote/proto;atvpb"
+	"\x1dcom.google.polo.wire.protobufB\tPoloProtoH\x03Z$shrmt/internal/atvremote/proto;atvpb"
 
 var (
 	file_internal_atvremote_proto_polo_proto_rawDescOnce sync.Once

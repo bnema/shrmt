@@ -212,7 +212,7 @@ If desktop-to-TV streaming is a goal, it is more likely to use a different stack
 
 For the current project, the cleanest split is:
 
-### Best path for the POC
+### Recommended path for shrmt
 - Android TV Remote v2
 - enough for discovery, pairing, and basic control
 
