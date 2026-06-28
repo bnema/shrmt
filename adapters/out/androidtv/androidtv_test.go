@@ -24,21 +24,24 @@ func TestPlanSendSteps(t *testing.T) {
 			want:     []sendStep{{key: action.Home.String()}},
 		},
 		{
-			name:     "home on sleeping device wakes first",
+			name:     "home on sleeping device uses app launch wake pulse",
 			act:      action.Home,
 			powered:  false,
 			hasPower: true,
 			want: []sendStep{
-				{key: action.Wakeup.String(), postDelay: wakeKeyDelay},
+				{appLink: wakeLaunchPackage, postDelay: wakeKeyDelay},
 				{key: action.Home.String()},
 			},
 		},
 		{
-			name:     "power on sleeping device becomes wakeup",
+			name:     "power on sleeping device uses app launch wake pulse",
 			act:      action.Power,
 			powered:  false,
 			hasPower: true,
-			want:     []sendStep{{key: action.Wakeup.String(), postDelay: wakeKeyDelay}},
+			want: []sendStep{
+				{appLink: wakeLaunchPackage, postDelay: wakeKeyDelay},
+				{key: action.Home.String()},
+			},
 		},
 		{
 			name:     "power without state stays power",

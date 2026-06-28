@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	pb "github.com/drosocode/atvremote/pkg/v2/proto"
@@ -156,6 +158,7 @@ func (s *Session) LaunchAppLink(ctx context.Context, link string) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	link = normalizeAppLaunchTarget(link)
 	if link == "" {
 		return errors.New("app link is required")
 	}
@@ -169,6 +172,47 @@ func (s *Session) LaunchAppLink(ctx context.Context, link string) error {
 		return err
 	}
 	return nil
+}
+
+func normalizeAppLaunchTarget(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	parsed, err := url.Parse(raw)
+	if err == nil && parsed.Scheme != "" {
+		return raw
+	}
+	if isAndroidPackageID(raw) {
+		return "market://launch?id=" + raw
+	}
+	return raw
+}
+
+func isAndroidPackageID(raw string) bool {
+	parts := strings.Split(raw, ".")
+	if len(parts) < 2 {
+		return false
+	}
+	for _, part := range parts {
+		if part == "" || !isASCIIAlpha(part[0]) {
+			return false
+		}
+		for i := 1; i < len(part); i++ {
+			if !isASCIIAlphaNumericOrUnderscore(part[i]) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isASCIIAlpha(b byte) bool {
+	return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+}
+
+func isASCIIAlphaNumericOrUnderscore(b byte) bool {
+	return isASCIIAlpha(b) || (b >= '0' && b <= '9') || b == '_'
 }
 
 func (s *Session) Close() {

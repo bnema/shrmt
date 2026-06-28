@@ -4,7 +4,9 @@ This playbook is for reverse-engineering the **real wake-from-standby path** use
 
 ## Current finding
 
-The standard Android TV Remote v2 path on port `6466` is **not sufficient** to wake this SHIELD from standby.
+Standard Android TV Remote v2 **key injection** on port `6466` is **not sufficient** to wake this SHIELD from standby.
+
+Android TV Remote v2 **app-link launch** on the same standard channel has been observed to wake the SHIELD from `powered=false` to `powered=true`.
 
 Tested keycodes over the standard channel:
 
@@ -22,11 +24,13 @@ Observed result each time:
 - command send succeeds
 - reported power state stays `powered=false`
 
-That strongly suggests the wake behavior lives on the NVIDIA-specific service:
+That suggests key-based wake behavior likely lives on the NVIDIA-specific service:
 
 - mDNS: `_nv_shield_remote._tcp`
 - port: `8987`
 - TLS certificate CN pattern: `nvbeyonder/...`
+
+For practical app behavior, `shrmt` can wake through the standard Android TV Remote v2 app-link launch request, then send `Home` after the device wakes.
 
 APK strings also point in the same direction:
 

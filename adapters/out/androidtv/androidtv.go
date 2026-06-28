@@ -18,6 +18,7 @@ const (
 	DefaultPairingPort = intatv.DefaultPairingPort
 	DefaultServiceName = intatv.DefaultServiceName
 	wakeKeyDelay       = 750 * time.Millisecond
+	wakeLaunchPackage  = "com.google.android.youtube.tv"
 )
 
 type Sender struct {
@@ -39,6 +40,7 @@ type Pairer struct {
 
 type sendStep struct {
 	key       string
+	appLink   string
 	postDelay time.Duration
 }
 
@@ -168,6 +170,20 @@ func sendAction(ctx context.Context, session *intatv.Session, act action.Action)
 
 	var result *intatv.SendKeyResult
 	for _, step := range steps {
+		if step.appLink != "" {
+			if err := session.LaunchAppLink(ctx, step.appLink); err != nil {
+				return nil, err
+			}
+			if step.postDelay > 0 {
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(step.postDelay):
+				}
+			}
+			result = session.Snapshot("launch:" + step.appLink)
+			continue
+		}
 		result, err = session.SendKeyWithDelay(ctx, step.key, step.postDelay)
 		if err != nil {
 			return nil, err
@@ -186,10 +202,8 @@ func planSendSteps(act action.Action, powered bool, hasPower bool) ([]sendStep, 
 	}
 	if !powered {
 		switch act {
-		case action.Home:
-			return []sendStep{{key: action.Wakeup.String(), postDelay: wakeKeyDelay}, {key: mapped}}, nil
-		case action.Power:
-			return []sendStep{{key: action.Wakeup.String(), postDelay: wakeKeyDelay}}, nil
+		case action.Home, action.Power:
+			return []sendStep{{appLink: wakeLaunchPackage, postDelay: wakeKeyDelay}, {key: action.Home.String()}}, nil
 		}
 	}
 	return []sendStep{{key: mapped}}, nil
