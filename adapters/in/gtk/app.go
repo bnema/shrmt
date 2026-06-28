@@ -35,9 +35,9 @@ var appShortcuts = []struct {
 	Label string
 	Link  string
 }{
-	{Label: "YouTube", Link: "https://www.youtube.com/"},
-	{Label: "Twitch", Link: "twitch://open"},
-	{Label: "Plex", Link: "https://app.plex.tv/"},
+	{Label: "YouTube", Link: "com.google.android.youtube.tv"},
+	{Label: "Twitch", Link: "tv.twitch.android.app"},
+	{Label: "Plex", Link: "com.plexapp.android"},
 }
 
 type App struct {

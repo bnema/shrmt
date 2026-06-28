@@ -160,12 +160,22 @@ Observed strings include:
 Observed strings include:
 
 - `REQUEST_APP_LIST`
+- `REQUEST_LAUNCH`
+- `RESPONSE_LAUNCH`
 - `launchApp`
 - `App launched succeeded`
 - `Failed to launch app`
 - `launchDb.json`
 - `SERVICEID_REMOTE_LAUNCHER`
 - `RemoteLauncherServicePayload`
+- `LaunchRequest`
+- `LaunchResponse`
+- `packageName`
+- `sourceUrl`
+- `openUrl`
+
+No hardcoded YouTube, Twitch, or Plex shortcut values were visible in the static strings inspected from the sample.
+The visible launcher strings suggest the remote launcher service is package-name capable and may also handle URL-style launch requests.
 
 ### SHIELD-specific accessory features
 
