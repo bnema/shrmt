@@ -66,7 +66,7 @@ func ParseCode(raw string) (Code, error) {
 		return "", fmt.Errorf("%w: expected 6 hex characters", ErrInvalidCode)
 	}
 	for _, r := range code {
-		if !(r >= '0' && r <= '9') && !(r >= 'A' && r <= 'F') {
+		if r < '0' || (r > '9' && (r < 'A' || r > 'F')) {
 			return "", fmt.Errorf("%w: %q", ErrInvalidCode, raw)
 		}
 	}

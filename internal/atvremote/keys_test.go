@@ -14,6 +14,9 @@ func TestResolveKeyCode(t *testing.T) {
 	if _, err := ResolveKeyCode("volume-up"); err != nil {
 		t.Fatalf("ResolveKeyCode(volume-up) returned error: %v", err)
 	}
+	if _, err := ResolveKeyCode("wake-up"); err != nil {
+		t.Fatalf("ResolveKeyCode(wake-up) returned error: %v", err)
+	}
 	if _, err := ResolveKeyCode("definitely-not-a-key"); err == nil {
 		t.Fatal("ResolveKeyCode should fail for unknown action")
 	}

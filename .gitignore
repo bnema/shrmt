@@ -21,3 +21,5 @@ pairedHosts.json
 
 # OS/editor
 .DS_Store
+__pycache__/
+*.pyc
