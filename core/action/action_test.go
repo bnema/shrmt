@@ -15,6 +15,8 @@ func TestParseCanonicalizesAliases(t *testing.T) {
 		"vol-up":     action.VolumeUp,
 		"VOL_DOWN":   action.VolumeDown,
 		"play pause": action.PlayPause,
+		"wake-up":    action.Wakeup,
+		"WAKE":       action.Wakeup,
 	}
 	for input, want := range tests {
 		got, err := action.Parse(input)

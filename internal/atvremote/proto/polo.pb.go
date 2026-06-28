@@ -758,7 +758,7 @@ const file_internal_atvremote_proto_polo_proto_rawDesc = "" +
 	"\x06Secret\x12\x16\n" +
 	"\x06secret\x18\x01 \x02(\fR\x06secret\"#\n" +
 	"\tSecretAck\x12\x16\n" +
-	"\x06secret\x18\x01 \x02(\fR\x06secretBW\n" +
+	"\x06secret\x18\x01 \x02(\fR\x06secretBR\n" +
 	"\x1dcom.google.polo.wire.protobufB\tPoloProtoH\x03Z$shrmt/internal/atvremote/proto;atvpb"
 
 var (

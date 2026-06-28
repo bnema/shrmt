@@ -71,6 +71,9 @@ func normalizeSessionParams(params SendKeyParams) SendKeyParams {
 	if params.ReadyTimeout == 0 {
 		params.ReadyTimeout = 5 * time.Second
 	}
+	if params.PostDelay == 0 {
+		params.PostDelay = 300 * time.Millisecond
+	}
 	return params
 }
 
@@ -79,6 +82,22 @@ func (s *Session) SendKey(ctx context.Context, action string) (*SendKeyResult, e
 }
 
 func (s *Session) SendKeyWithDelay(ctx context.Context, action string, postDelay time.Duration) (*SendKeyResult, error) {
+	keyCode, err := ResolveKeyCode(action)
+	if err != nil {
+		return nil, err
+	}
+	return s.sendKeyCodeWithDelay(ctx, keyCode, pb.RemoteDirection_SHORT, postDelay, normalizeAction(action))
+}
+
+func (s *Session) SendKeyCode(ctx context.Context, keyCode pb.RemoteKeyCode, direction pb.RemoteDirection) (*SendKeyResult, error) {
+	return s.SendKeyCodeWithDelay(ctx, keyCode, direction, 0)
+}
+
+func (s *Session) SendKeyCodeWithDelay(ctx context.Context, keyCode pb.RemoteKeyCode, direction pb.RemoteDirection, postDelay time.Duration) (*SendKeyResult, error) {
+	return s.sendKeyCodeWithDelay(ctx, keyCode, direction, postDelay, keyCode.String())
+}
+
+func (s *Session) sendKeyCodeWithDelay(ctx context.Context, keyCode pb.RemoteKeyCode, direction pb.RemoteDirection, postDelay time.Duration, resultAction string) (*SendKeyResult, error) {
 	if s == nil || s.client == nil {
 		return nil, errors.New("session is not connected")
 	}
@@ -88,12 +107,7 @@ func (s *Session) SendKeyWithDelay(ctx context.Context, action string, postDelay
 	if err := s.client.getErr(); err != nil {
 		return nil, err
 	}
-
-	keyCode, err := ResolveKeyCode(action)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.client.sendKey(keyCode, pb.RemoteDirection_SHORT); err != nil {
+	if err := s.client.sendKey(keyCode, direction); err != nil {
 		return nil, fmt.Errorf("send key: %w", err)
 	}
 
@@ -108,19 +122,31 @@ func (s *Session) SendKeyWithDelay(ctx context.Context, action string, postDelay
 	if err := s.client.getErr(); err != nil {
 		return nil, err
 	}
+	return s.Snapshot(resultAction), nil
+}
 
+func (s *Session) Snapshot(action string) *SendKeyResult {
+	if s == nil || s.client == nil {
+		return nil
+	}
 	supported, active := s.client.getFeatures()
 	powered, hasPower := s.client.getPowerState()
-
 	return &SendKeyResult{
 		Host:              s.params.Host,
 		Port:              s.params.Port,
-		Action:            normalizeAction(action),
+		Action:            action,
 		SupportedFeatures: supported,
 		ActiveFeatures:    active,
 		Powered:           powered,
 		HasPowerState:     hasPower,
-	}, nil
+	}
+}
+
+func (s *Session) PowerState() (bool, bool) {
+	if s == nil || s.client == nil {
+		return false, false
+	}
+	return s.client.getPowerState()
 }
 
 func (s *Session) LaunchAppLink(ctx context.Context, link string) error {

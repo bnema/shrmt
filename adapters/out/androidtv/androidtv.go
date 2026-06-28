@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"shrmt/core/action"
 	"shrmt/core/device"
@@ -16,6 +17,7 @@ const (
 	DefaultRemotePort  = intatv.DefaultRemotePort
 	DefaultPairingPort = intatv.DefaultPairingPort
 	DefaultServiceName = intatv.DefaultServiceName
+	wakeKeyDelay       = 750 * time.Millisecond
 )
 
 type Sender struct {
@@ -35,6 +37,11 @@ type Pairer struct {
 	PairingPort int
 }
 
+type sendStep struct {
+	key       string
+	postDelay time.Duration
+}
+
 func NewSender() *Sender {
 	return &Sender{}
 }
@@ -44,11 +51,7 @@ func NewPairer() *Pairer {
 }
 
 func (s *Sender) Send(ctx context.Context, target device.Target, creds pairing.Credentials, act action.Action) (remote.SendResult, error) {
-	mapped, err := actionToAndroidTV(act)
-	if err != nil {
-		return remote.SendResult{}, err
-	}
-	result, err := s.sendWithPersistentSession(ctx, target, creds, mapped)
+	result, err := s.sendWithPersistentSession(ctx, target, creds, act)
 	if err != nil {
 		return remote.SendResult{}, err
 	}
@@ -131,7 +134,7 @@ func (p *Pairer) Pair(ctx context.Context, req pairing.PairRequest) (pairing.Cre
 	}, nil
 }
 
-func (s *Sender) sendWithPersistentSession(ctx context.Context, target device.Target, creds pairing.Credentials, mapped string) (*intatv.SendKeyResult, error) {
+func (s *Sender) sendWithPersistentSession(ctx context.Context, target device.Target, creds pairing.Credentials, act action.Action) (*intatv.SendKeyResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -140,7 +143,7 @@ func (s *Sender) sendWithPersistentSession(ctx context.Context, target device.Ta
 		return nil, err
 	}
 
-	result, err := session.SendKey(ctx, mapped)
+	result, err := sendAction(ctx, session, act)
 	if err == nil {
 		return result, nil
 	}
@@ -153,7 +156,43 @@ func (s *Sender) sendWithPersistentSession(ctx context.Context, target device.Ta
 	if reconnectErr != nil {
 		return nil, reconnectErr
 	}
-	return session.SendKey(ctx, mapped)
+	return sendAction(ctx, session, act)
+}
+
+func sendAction(ctx context.Context, session *intatv.Session, act action.Action) (*intatv.SendKeyResult, error) {
+	powered, hasPower := session.PowerState()
+	steps, err := planSendSteps(act, powered, hasPower)
+	if err != nil {
+		return nil, err
+	}
+
+	var result *intatv.SendKeyResult
+	for _, step := range steps {
+		result, err = session.SendKeyWithDelay(ctx, step.key, step.postDelay)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
+func planSendSteps(act action.Action, powered bool, hasPower bool) ([]sendStep, error) {
+	mapped, err := actionToAndroidTV(act)
+	if err != nil {
+		return nil, err
+	}
+	if !hasPower {
+		return []sendStep{{key: mapped}}, nil
+	}
+	if !powered {
+		switch act {
+		case action.Home:
+			return []sendStep{{key: action.Wakeup.String(), postDelay: wakeKeyDelay}, {key: mapped}}, nil
+		case action.Power:
+			return []sendStep{{key: action.Wakeup.String(), postDelay: wakeKeyDelay}}, nil
+		}
+	}
+	return []sendStep{{key: mapped}}, nil
 }
 
 func (s *Sender) ensureSessionLocked(ctx context.Context, target device.Target, creds pairing.Credentials) (*intatv.Session, error) {
@@ -204,7 +243,8 @@ func actionToAndroidTV(act action.Action) (string, error) {
 		action.Sleep,
 		action.Up,
 		action.VolumeDown,
-		action.VolumeUp:
+		action.VolumeUp,
+		action.Wakeup:
 		return act.String(), nil
 	default:
 		return "", fmt.Errorf("unsupported android tv action %q", act)

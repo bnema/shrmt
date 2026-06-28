@@ -79,6 +79,14 @@ Goals:
 - identify message framing and protobuf usage
 - determine how pairing, virtual input, and launcher services work
 
+Current exploratory tooling:
+- `go run ./cmd/nvprobe ...`
+
+Early active-probing finding:
+- raw protobuf attempts appear to be treated differently from length-framed attempts
+- a candidate `service_id=1` behaves differently from `service_id>=2`, making it a plausible handshake-service lead
+- a more structured raw `hello` candidate can be used as a preamble before a second message, and this measurably delays server rejection of some follow-up service/command pairs
+
 Likely areas of interest:
 - authentication / PIN challenge
 - host info

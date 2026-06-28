@@ -29,6 +29,9 @@ var keyActions = map[string]pb.RemoteKeyCode{
 	"volume-down": pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
 	"volume-up":   pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
 	"volup":       pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
+	"wake":        pb.RemoteKeyCode_KEYCODE_WAKEUP,
+	"wake-up":     pb.RemoteKeyCode_KEYCODE_WAKEUP,
+	"wakeup":      pb.RemoteKeyCode_KEYCODE_WAKEUP,
 }
 
 func ResolveKeyCode(action string) (pb.RemoteKeyCode, error) {
@@ -54,6 +57,8 @@ func AvailableKeyActions() []string {
 			canonical = "volume-down"
 		case "volup", "vol-up":
 			canonical = "volume-up"
+		case "wake", "wake-up":
+			canonical = "wakeup"
 		}
 		if _, ok := seen[canonical]; ok {
 			continue

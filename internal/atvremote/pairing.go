@@ -96,7 +96,9 @@ func Pair(ctx context.Context, params PairParams) (*PairResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("pair dial: %w", err)
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
@@ -161,8 +163,8 @@ func newPairingClient(conn *tls.Conn, serviceName, clientName string) *pairingCl
 func (p *pairingClient) start() error {
 	request := defaultPairingMessage()
 	request.PairingRequest = &atvpb.PairingRequest{
-		ServiceName: proto.String(p.serviceName),
-		ClientName:  proto.String(p.clientName),
+		ServiceName: new(p.serviceName),
+		ClientName:  new(p.clientName),
 	}
 	if err := p.writeMessage(request); err != nil {
 		return fmt.Errorf("pair request: %w", err)

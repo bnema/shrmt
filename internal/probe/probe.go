@@ -75,14 +75,18 @@ func tlsProbe(ctx context.Context, target Target) (*TLSInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rawConn.Close()
+	defer func() {
+		_ = rawConn.Close()
+	}()
 
 	serverName := inferServerName(target)
 	conn := tls.Client(rawConn, &tls.Config{
 		InsecureSkipVerify: true,
 		ServerName:         serverName,
 	})
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	if err := conn.HandshakeContext(ctx); err != nil {
 		return nil, err

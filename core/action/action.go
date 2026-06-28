@@ -3,7 +3,7 @@ package action
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -25,6 +25,7 @@ const (
 	Up         Action = "up"
 	VolumeDown Action = "volume-down"
 	VolumeUp   Action = "volume-up"
+	Wakeup     Action = "wakeup"
 )
 
 var aliases = map[string]Action{
@@ -47,6 +48,9 @@ var aliases = map[string]Action{
 	"volume-down": VolumeDown,
 	"volume-up":   VolumeUp,
 	"volup":       VolumeUp,
+	"wake":        Wakeup,
+	"wake-up":     Wakeup,
+	"wakeup":      Wakeup,
 }
 
 func Parse(raw string) (Action, error) {
@@ -81,8 +85,9 @@ func All() []Action {
 		Up,
 		VolumeDown,
 		VolumeUp,
+		Wakeup,
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	slices.Sort(out)
 	return out
 }
 

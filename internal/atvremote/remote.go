@@ -73,20 +73,7 @@ func SendKey(ctx context.Context, params SendKeyParams, action string) (*SendKey
 		return nil, err
 	}
 	defer session.Close()
-	return session.SendKeyWithDelay(ctx, action, params.PostDelay)
-}
-
-func normalizeSendKeyParams(params SendKeyParams) SendKeyParams {
-	if params.Port == 0 {
-		params.Port = DefaultRemotePort
-	}
-	if params.ReadyTimeout == 0 {
-		params.ReadyTimeout = 5 * time.Second
-	}
-	if params.PostDelay == 0 {
-		params.PostDelay = 300 * time.Millisecond
-	}
-	return params
+	return session.SendKeyWithDelay(ctx, action, session.params.PostDelay)
 }
 
 func newRemoteClient(conn *tls.Conn) *remoteClient {

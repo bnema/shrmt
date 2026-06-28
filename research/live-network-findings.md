@@ -46,6 +46,53 @@ Observed characteristics:
 - certificate naming pattern included an `nvbeyonder/...` prefix
 - behavior was consistent with a proprietary NVIDIA protocol surface
 
+## Active probing on the NVIDIA path
+
+A first round of active `nvprobe` experiments was run directly against the NVIDIA service on `8987`.
+
+Observed behavior so far:
+
+- TLS connects cleanly without a client certificate
+- no immediate server banner is sent after connect
+- several candidate **varint-framed** protobuf envelopes produced:
+  - no response bytes
+  - no immediate connection close
+  - no observable Android TV power-state change
+- several candidate **raw protobuf** envelopes produced a more interesting split:
+  - messages with `service_id=1` did **not** immediately close the connection
+  - similar raw messages with `service_id>=2` were closed by the server with EOF
+
+### Interpretation
+
+This does **not** prove the full wire format yet, but it does suggest:
+
+- `service_id=1` is a plausible handshake-like service candidate
+- raw protobuf framing is still worth investigating
+- the server appears to distinguish at least some candidate message shapes rather than blindly black-holing all input
+
+## Hello-preamble follow-up probing
+
+A second round of active probing used a **two-message sequence** on the same TLS connection:
+
+1. send a candidate handshake-like `hello` message on the raw protobuf path
+2. immediately send a second raw base message for another candidate service/command pair
+
+Observed behavior:
+
+- without any hello preamble, most raw `service_id >= 2` probes were rejected very quickly with EOF
+- with a more complete hello candidate present first, the same follow-up probes were still rejected, but often **much later**
+- the strongest delay was seen with hello candidates shaped like:
+  - devInfo layout similar to `os, name, packageName, androidId, host, remotePort`
+  - plus a `capability` field set to a small integer such as `1` or `2`
+
+Practical meaning:
+
+- the hello payload is likely being parsed more deeply than the earlier minimal probes
+- the server appears to enter a different intermediate state after some hello candidates
+- we still do **not** have a valid full follow-up request, but the search is now more constrained:
+  - build a better hello
+  - then probe likely `AUTHENTICATION`, `HOST_INFO`, and `VIRTUAL_INPUT` follow-ups on the same connection
+
 ## Practical interpretation
 
 A SHIELD device appears to expose **two important network control surfaces**:
