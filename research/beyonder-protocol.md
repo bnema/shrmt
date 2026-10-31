@@ -252,3 +252,24 @@ Other derived frames:
   traced paths.
 - Original `.proto` package name: unknown (`PackageName` object not
   decoded); schemas use `package beyonder`.
+
+## 8. Testing with beyonderprobe
+
+`cmd/beyonderprobe` exercises the client against a real SHIELD. `--host`
+defaults to the saved shrmt target; `--dump` prints each chunk as `> hex`
+(sent) or `< hex` (received, followed by its decoded message); `--wait`
+(default 2s) keeps listening after the command.
+
+```sh
+go run ./cmd/beyonderprobe hello --host 192.168.1.16 --dump
+go run ./cmd/beyonderprobe pair  --host 192.168.1.16 --dump   # type the PIN shown on the TV
+go run ./cmd/beyonderprobe power --host 192.168.1.16 --dump --wait 5s
+go run ./cmd/beyonderprobe special --host 192.168.1.16 --name home
+go run ./cmd/beyonderprobe special --host 192.168.1.16 --value 30
+```
+
+`pair` saves the issued certificate, prints any level change on the same
+connection, then reconnects with the new certificate and prints the level it
+gets (1000 expected). In `special`, `--name` picks the input
+(`home|back|settings|power-menu|sleep|assist|osc`); the hello name is
+`--hello-name`.
