@@ -9,29 +9,34 @@ import (
 )
 
 var keyActions = map[string]pb.RemoteKeyCode{
-	"back":        pb.RemoteKeyCode_KEYCODE_BACK,
-	"center":      pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
-	"down":        pb.RemoteKeyCode_KEYCODE_DPAD_DOWN,
-	"enter":       pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
-	"home":        pb.RemoteKeyCode_KEYCODE_HOME,
-	"left":        pb.RemoteKeyCode_KEYCODE_DPAD_LEFT,
-	"mute":        pb.RemoteKeyCode_KEYCODE_MUTE,
-	"ok":          pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
-	"play-pause":  pb.RemoteKeyCode_KEYCODE_MEDIA_PLAY_PAUSE,
-	"power":       pb.RemoteKeyCode_KEYCODE_POWER,
-	"right":       pb.RemoteKeyCode_KEYCODE_DPAD_RIGHT,
-	"sleep":       pb.RemoteKeyCode_KEYCODE_SLEEP,
-	"soft-sleep":  pb.RemoteKeyCode_KEYCODE_SOFT_SLEEP,
-	"up":          pb.RemoteKeyCode_KEYCODE_DPAD_UP,
-	"vol-down":    pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
-	"vol-up":      pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
-	"voldown":     pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
-	"volume-down": pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
-	"volume-up":   pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
-	"volup":       pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
-	"wake":        pb.RemoteKeyCode_KEYCODE_WAKEUP,
-	"wake-up":     pb.RemoteKeyCode_KEYCODE_WAKEUP,
-	"wakeup":      pb.RemoteKeyCode_KEYCODE_WAKEUP,
+	"back":         pb.RemoteKeyCode_KEYCODE_BACK,
+	"center":       pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
+	"down":         pb.RemoteKeyCode_KEYCODE_DPAD_DOWN,
+	"enter":        pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
+	"fast-forward": pb.RemoteKeyCode_KEYCODE_MEDIA_FAST_FORWARD,
+	"ff":           pb.RemoteKeyCode_KEYCODE_MEDIA_FAST_FORWARD,
+	"home":         pb.RemoteKeyCode_KEYCODE_HOME,
+	"left":         pb.RemoteKeyCode_KEYCODE_DPAD_LEFT,
+	"menu":         pb.RemoteKeyCode_KEYCODE_MENU,
+	"mute":         pb.RemoteKeyCode_KEYCODE_MUTE,
+	"ok":           pb.RemoteKeyCode_KEYCODE_DPAD_CENTER,
+	"play-pause":   pb.RemoteKeyCode_KEYCODE_MEDIA_PLAY_PAUSE,
+	"power":        pb.RemoteKeyCode_KEYCODE_POWER,
+	"rew":          pb.RemoteKeyCode_KEYCODE_MEDIA_REWIND,
+	"rewind":       pb.RemoteKeyCode_KEYCODE_MEDIA_REWIND,
+	"right":        pb.RemoteKeyCode_KEYCODE_DPAD_RIGHT,
+	"sleep":        pb.RemoteKeyCode_KEYCODE_SLEEP,
+	"soft-sleep":   pb.RemoteKeyCode_KEYCODE_SOFT_SLEEP,
+	"up":           pb.RemoteKeyCode_KEYCODE_DPAD_UP,
+	"vol-down":     pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
+	"vol-up":       pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
+	"voldown":      pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
+	"volume-down":  pb.RemoteKeyCode_KEYCODE_VOLUME_DOWN,
+	"volume-up":    pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
+	"volup":        pb.RemoteKeyCode_KEYCODE_VOLUME_UP,
+	"wake":         pb.RemoteKeyCode_KEYCODE_WAKEUP,
+	"wake-up":      pb.RemoteKeyCode_KEYCODE_WAKEUP,
+	"wakeup":       pb.RemoteKeyCode_KEYCODE_WAKEUP,
 }
 
 func ResolveKeyCode(action string) (pb.RemoteKeyCode, error) {
@@ -53,6 +58,10 @@ func AvailableKeyActions() []string {
 			canonical = "enter"
 		case "center":
 			canonical = "enter"
+		case "ff":
+			canonical = "fast-forward"
+		case "rew":
+			canonical = "rewind"
 		case "voldown", "vol-down":
 			canonical = "volume-down"
 		case "volup", "vol-up":

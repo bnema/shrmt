@@ -9,14 +9,19 @@ import (
 
 func TestParseCanonicalizesAliases(t *testing.T) {
 	tests := map[string]action.Action{
-		"enter":      action.Enter,
-		"ok":         action.Enter,
-		"center":     action.Enter,
-		"vol-up":     action.VolumeUp,
-		"VOL_DOWN":   action.VolumeDown,
-		"play pause": action.PlayPause,
-		"wake-up":    action.Wakeup,
-		"WAKE":       action.Wakeup,
+		"enter":        action.Enter,
+		"ok":           action.Enter,
+		"center":       action.Enter,
+		"vol-up":       action.VolumeUp,
+		"VOL_DOWN":     action.VolumeDown,
+		"play pause":   action.PlayPause,
+		"wake-up":      action.Wakeup,
+		"WAKE":         action.Wakeup,
+		"menu":         action.Menu,
+		"rew":          action.Rewind,
+		"rewind":       action.Rewind,
+		"ff":           action.FastForward,
+		"Fast_Forward": action.FastForward,
 	}
 	for input, want := range tests {
 		got, err := action.Parse(input)
