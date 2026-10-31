@@ -190,6 +190,28 @@ func (a *App) buildUI() *pgtk.Box {
 	a.pairSection.Append(&pairBtn.Widget)
 	root.Append(&a.pairSection.Widget)
 
+	toolbar := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
+	toolbar.SetHalign(pgtk.AlignEndValue)
+	volumeRevealer := pgtk.NewRevealer()
+	volumeBtn := a.newButton("Volume", func() {
+		volumeRevealer.SetRevealChild(!volumeRevealer.GetRevealChild())
+	})
+	volumeBtn.SetSizeRequest(88, 40)
+	toolbar.Append(&volumeBtn.Widget)
+	powerBtn := a.newActionButton("⏻ Power", action.Power)
+	powerBtn.SetHexpand(false)
+	powerBtn.SetSizeRequest(88, 40)
+	toolbar.Append(&powerBtn.Widget)
+	root.Append(&toolbar.Widget)
+
+	volumeRow := a.newEvenRow(
+		a.newActionButton("Vol-", action.VolumeDown),
+		a.newActionButton("Mute", action.Mute),
+		a.newActionButton("Vol+", action.VolumeUp),
+	)
+	volumeRevealer.SetChild(&volumeRow.Widget)
+	root.Append(&volumeRevealer.Widget)
+
 	grid := pgtk.NewGrid()
 	grid.SetColumnSpacing(8)
 	grid.SetRowSpacing(8)
@@ -205,22 +227,17 @@ func (a *App) buildUI() *pgtk.Box {
 	grid.Attach(&a.newSpacer().Widget, 2, 2, 1, 1)
 	root.Append(&grid.Widget)
 
-	topRow := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
-	topRow.Append(&a.newActionButton("Power", action.Power).Widget)
-	topRow.Append(&a.newActionButton("Home", action.Home).Widget)
-	topRow.Append(&a.newActionButton("Back", action.Back).Widget)
-	root.Append(&topRow.Widget)
+	root.Append(&a.newEvenRow(
+		a.newActionButton("Back", action.Back),
+		a.newActionButton("Home", action.Home),
+		a.newActionButton("Menu", action.Menu),
+	).Widget)
 
-	mediaRow := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
-	mediaRow.Append(&a.newActionButton("Play/Pause", action.PlayPause).Widget)
-	mediaRow.Append(&a.newActionButton("Mute", action.Mute).Widget)
-	mediaRow.Append(&a.newActionButton("Sleep", action.Sleep).Widget)
-	root.Append(&mediaRow.Widget)
-
-	volumeRow := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
-	volumeRow.Append(&a.newActionButton("Vol-", action.VolumeDown).Widget)
-	volumeRow.Append(&a.newActionButton("Vol+", action.VolumeUp).Widget)
-	root.Append(&volumeRow.Widget)
+	root.Append(&a.newEvenRow(
+		a.newActionButton("⏪", action.Rewind),
+		a.newActionButton("⏯", action.PlayPause),
+		a.newActionButton("⏩", action.FastForward),
+	).Widget)
 
 	appsRow := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
 	for _, shortcut := range appShortcuts {
@@ -240,6 +257,15 @@ func (a *App) newActionButton(label string, act action.Action) *pgtk.Button {
 	btn.SetSizeRequest(88, 52)
 	a.actionButtons = append(a.actionButtons, btn)
 	return btn
+}
+
+func (a *App) newEvenRow(buttons ...*pgtk.Button) *pgtk.Box {
+	row := pgtk.NewBox(pgtk.OrientationHorizontalValue, 8)
+	row.SetHomogeneous(true)
+	for _, btn := range buttons {
+		row.Append(&btn.Widget)
+	}
+	return row
 }
 
 func (a *App) newLaunchButton(label, link string) *pgtk.Button {
@@ -294,6 +320,15 @@ func (a *App) installKeyController(window *pgtk.ApplicationWindow) {
 			return true
 		case uint(gdk.KEY_p), uint(gdk.KEY_P):
 			a.sendAsync(action.PlayPause)
+			return true
+		case uint(gdk.KEY_Menu):
+			a.sendAsync(action.Menu)
+			return true
+		case uint(gdk.KEY_comma):
+			a.sendAsync(action.Rewind)
+			return true
+		case uint(gdk.KEY_period):
+			a.sendAsync(action.FastForward)
 			return true
 		case uint(gdk.KEY_m), uint(gdk.KEY_M):
 			a.sendAsync(action.Mute)
