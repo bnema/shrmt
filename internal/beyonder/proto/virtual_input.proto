@@ -1,0 +1,75 @@
+// Reconstructed from virtual_input.pb.dart (VirtualInputPayload._i @0x50e8c4),
+// virtual_input.pbenum.dart / objs.txt, and
+// NvBeyonderVirtualInputMsg.buildSpecialInputCommandMsg @0x524dcc.
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+// Carried in BaseMessage.payload with service_id = SERVICEID_VIRTUAL_INPUT (1001).
+message VirtualInputPayload {
+  enum Request {
+    REQUEST_PROTO3_REQUIRES_ZERO = 0;
+    REQUEST_ALLOCATE = 10;
+    REQUEST_FREE = 11;
+    REQUEST_SET_RANGE = 12;
+    REQUEST_COMMAND = 20;
+  }
+  enum AccessoryType {
+    ACCESSORY_PROTO3_REQUIRES_ZERO = 0;
+    ACCESSORY_KEYBOARD = 1;
+    ACCESSORY_MOUSE = 2;
+    ACCESSORY_TOUCHPAD = 3;
+    ACCESSORY_TOUCHSCREEN = 4;
+    ACCESSORY_CONTROLLER = 5;
+    ACCESSORY_REMOTE = 6;
+  }
+  enum InputType {
+    INPUT_PROTO3_REQUIRES_ZERO = 0;
+    INPUT_LINUX_EVENT = 1;
+    INPUT_LINUX_EVENT_STATE = 2;
+    INPUT_ASCII_KEY_STATE = 10;
+    INPUT_ASCII_KEY = 11;
+    INPUT_ASCII_STRING = 12;
+    INPUT_RELATIVE = 20;
+    INPUT_ABSOLUTE = 21;
+    INPUT_WHEEL = 22;
+    INPUT_SPECIAL = 30;
+  }
+  enum KeyState {
+    KEY_PROTO3_REQUIRES_ZERO = 0;
+    KEY_DOWN = 1;
+    KEY_UP = 2;
+  }
+  enum SpecialInput {
+    ACTION_PROTO3_REQUIRES_ZERO = 0;
+    ACTION_TOGGLE_OSC = 10;
+    ACTION_HOME = 11;
+    ACTION_BACK = 12;
+    ACTION_SETTINGS = 20;
+    ACTION_POWER_MENU = 21;
+    ACTION_SLEEP_NOW = 30;
+    ACTION_GOOGLE_ASSIST = 31;
+  }
+  // Present in the pbenum file but not referenced by any field.
+  enum KeyActions {
+    ACTION_UP = 0;
+    ACTION_DOWN = 1;
+  }
+  enum KeyCodes {
+    KEY_CODES_UNSPECIFIED = 0;  // added so proto3 accepts the enum; not in the app
+    KEY_VOLUME_DOWN = 114;
+    KEY_VOLUME_UP = 115;
+  }
+
+  Request request = 1;
+  AccessoryType accessory_type = 2;
+  // field 3: not declared in the app (gap in BuilderInfo).
+  InputType input_type = 4;
+  KeyState key_state = 5;
+  // PbFieldType 0x2006 = REPEATED|PACKED|SINT32, checked with _checkSigned32.
+  repeated sint32 value = 6 [packed = true];
+  string text = 7;
+  SpecialInput special_input = 8;
+}

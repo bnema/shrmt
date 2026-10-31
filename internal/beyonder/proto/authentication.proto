@@ -1,0 +1,58 @@
+// Reconstructed from authentication.pb.dart (AuthorizationLevel._i @0x50aed8,
+// PairingPinCode._i @0x50b134, PairingResult._i @0x50abac,
+// AuthenticationServicePayload._i @0x508b68).
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+// Carried in BaseMessage.payload with service_id = SERVICEID_AUTHENTICATION (10).
+message AuthenticationServicePayload {
+  enum CommandType {
+    COMMAND_PROTO3_REQUIRES_ZERO = 0;
+    COMMAND_AUTHORIZATION_LEVEL = 1000;  // server -> client, object = AuthorizationLevel
+    COMMAND_PIN_REQUEST = 1101;          // client -> server, no object
+    COMMAND_PIN_CHALLENGE = 1103;        // server -> client, PIN shown on TV
+    COMMAND_PIN_CODE = 1105;             // client -> server, object = PairingPinCode
+    COMMAND_PAIRING_RESULT = 2101;       // server -> client, object = PairingResult
+    COMMAND_UNPAIR = 2200;
+  }
+
+  CommandType command = 1;
+  bytes object = 2;  // serialized sub-message selected by command
+}
+
+message AuthorizationLevel {
+  enum Level {
+    LEVEL_PROTO3_REQUIRES_ZERO = 0;
+    LEVEL_NONE = 1;
+    LEVEL_VIRTUAL_INPUT = 1000;
+  }
+
+  Level level = 1;
+  string device_name = 2;  // server (SHIELD) name
+  int32 capability = 3;    // server Capability bitmask
+}
+
+message PairingPinCode {
+  string pin_code = 1;
+  string device_id = 2;
+}
+
+message PairingResult {
+  enum ResultType {
+    RESULT_PROTO3_REQUIRES_ZERO = 0;
+    RESULT_SUCCESS = 1;
+    RESULT_WRONG_PIN = 2;
+    RESULT_CERTIFICATE_FAILURE = 3;
+    RESULT_TIME_OUT = 4;
+    RESULT_INVALIDATED_PIN = 5;
+    RESULT_UNKNOWN_FAILURE = 1000;
+  }
+
+  ResultType result_type = 1;
+  string result_string = 2;
+  bytes private_key = 3;  // PKCS#8 RSA private key for the client TLS cert
+  bytes certificate = 4;  // X.509 DER client certificate issued by the SHIELD
+}

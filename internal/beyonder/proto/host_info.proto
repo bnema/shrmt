@@ -1,0 +1,27 @@
+// Reconstructed from host_info.pb.dart (HostInfoServicePayload._i @0x51c80c,
+// HostInformation._i @0x51cab8).
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+// Carried in BaseMessage.payload with service_id = SERVICEID_HOST_INFO (11).
+message HostInfoServicePayload {
+  enum CommandType {
+    COMMAND_PROTO3_REQUIRES_ZERO = 0;
+    COMMAND_HOST_INFO_REQUEST = 1101;
+    COMMAND_HOST_INFO_RESULT = 2101;  // object = HostInformation
+  }
+
+  CommandType command = 1;
+  bytes object = 2;
+}
+
+message HostInformation {
+  string device_name = 1;
+  string ip = 2;
+  int32 port = 3;
+  string android_id = 4;
+  repeated string supported_abis = 5;  // BuilderInfo.pPS (repeated string)
+}

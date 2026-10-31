@@ -1,0 +1,28 @@
+// Reconstructed from capability.pbenum.dart / objs.txt (Capability instances).
+// Values are bit flags OR-ed into Handshake.capability / AuthorizationLevel.capability.
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+enum Capability {
+  NONE = 0;
+  INPUT_GENERIC = 1;
+  INPUT_METHOD = 2;
+  INPUT_ABSOLUTE = 4;
+  FILE_TRANSFER = 8;
+  VOICE_SEARCH = 16;
+  MEDIA_CONTROL = 32;
+  HOST_INFO = 64;
+  MESSAGE_FRAMING = 128;
+  APP_INSTALL = 256;
+  PIN_CODE_CANCEL = 512;
+  RTT_MESSAGING = 1024;
+  FEEDBACK = 2048;
+  VOLUME_CONTROL = 4096;
+  REMOTE_LAUNCHER = 8192;
+  PRIVATE_LISTENING = 16384;
+  ACCESSORY_LOCATOR = 32768;
+  ACCESSORY_LISTENER = 65536;
+}

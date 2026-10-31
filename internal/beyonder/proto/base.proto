@@ -1,0 +1,37 @@
+// Reconstructed from com.nvidia.shield.remote 2.1.8 (Blutter disassembly of
+// package:beyonder_backend/protobuf/base.pb.dart, BaseMessage._i @0x50927c).
+// Field numbers/types are taken from BuilderInfo calls; the original .proto
+// package name is unknown. See research/beyonder-protocol.md.
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+message BaseMessage {
+  enum ServiceId {
+    SERVICEID_PROTO3_REQUIRES_ZERO = 0;
+    SERVICEID_HANDSHAKE = 1;
+    SERVICEID_CATALOG = 2;
+    SERVICEID_AUTHENTICATION = 10;
+    SERVICEID_HOST_INFO = 11;
+    SERVICEID_VIRTUAL_INPUT = 1001;
+    SERVICEID_AUDIO_INPUT = 1002;
+    SERVICEID_FILE_TRANSFER = 1003;
+    SERVICEID_INPUT_METHOD_MONITOR = 1004;
+    SERVICEID_MEDIA_SESSION = 1005;
+    SERVICEID_APP_INSTALL = 1006;
+    SERVICEID_FEEDBACK = 1007;
+    SERVICEID_VOLUME_CONTROL = 1008;
+    SERVICEID_REMOTE_LAUNCHER = 1009;
+    SERVICEID_AUDIO_OUTPUT = 1010;
+    SERVICEID_ACCESSORY_LOCATOR = 1011;
+    SERVICEID_CATEGORY_INTENT = 2000;
+  }
+
+  ServiceId service_id = 1;   // "serviceId"
+  bytes payload = 2;          // "payload": serialized per-service message
+  int32 service_number = 3;   // "serviceNumber": never set by the app (unknown use)
+  int32 size = 4;             // "size": >0 announces a large framed message
+  uint64 time_stamp = 5;      // "timeStamp": RTT probe, ms since epoch (PbFieldType 0x10000 = uint64)
+}
