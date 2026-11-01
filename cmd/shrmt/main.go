@@ -8,6 +8,7 @@ import (
 	cliadapter "shrmt/adapters/in/cli"
 	gtkadapter "shrmt/adapters/in/gtk"
 	androidtv "shrmt/adapters/out/androidtv"
+	beyonder "shrmt/adapters/out/beyonder"
 	xdgstore "shrmt/adapters/out/xdg"
 	zeroconf "shrmt/adapters/out/zeroconf"
 	"shrmt/controller"
@@ -40,7 +41,7 @@ func buildController() *controller.Controller {
 	deviceService := device.NewService(discoverer, targetStore, androidtv.DefaultRemotePort)
 	credentialStore := xdgstore.NewCredentialStore()
 	pairingService := pairing.NewService(androidtv.NewPairer(), credentialStore, clientName, serviceName)
-	remoteService := remote.NewService(deviceService, pairingService, androidtv.NewSender())
+	remoteService := remote.NewService(deviceService, pairingService, beyonder.NewSender(androidtv.NewSender()))
 	return controller.New(deviceService, pairingService, remoteService)
 }
 
