@@ -1,14 +1,15 @@
-// Package beyonder routes the power action through NVIDIA's beyonder
-// protocol (TLS :8987), which wakes and sleeps the SHIELD like the official
-// app. Every other action goes to the wrapped sender.
+// Package beyonder routes power and app shortcuts through NVIDIA's beyonder
+// protocol (TLS :8987). Other actions go to the wrapped sender.
 package beyonder
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"shrmt/core/action"
@@ -28,14 +29,14 @@ const (
 	flushDelay = 300 * time.Millisecond
 )
 
-// Inner is the sender used for every action except power.
+// Inner is the fallback sender for actions not routed through beyonder.
 type Inner interface {
 	remote.Sender
 	remote.Warmupper
 	remote.Launcher
 }
 
-// Sender sends power over beyonder when beyonder credentials are stored,
+// Sender sends power and app shortcuts over beyonder when credentials are stored,
 // and falls back to Inner otherwise.
 type Sender struct {
 	inner Inner
@@ -58,14 +59,11 @@ func (s *Sender) Send(ctx context.Context, target device.Target, creds pairing.C
 	}
 	ctx, cancel := context.WithTimeout(ctx, stepBudget)
 	defer cancel()
-	c, err := intbey.Dial(ctx, net.JoinHostPort(target.Host, strconv.Itoa(Port)), cert)
+	c, err := connect(ctx, target, cert)
 	if err != nil {
 		return remote.SendResult{}, err
 	}
 	defer c.Close()
-	if _, err := c.Hello(ctx, helloName); err != nil {
-		return remote.SendResult{}, err
-	}
 	if err := c.SendSpecialInput(ctx, pb.VirtualInputPayload_ACTION_SLEEP_NOW); err != nil {
 		if errors.Is(err, intbey.ErrNotPaired) {
 			return remote.SendResult{}, fmt.Errorf("%w: run beyonderprobe pair", err)
@@ -84,5 +82,40 @@ func (s *Sender) Warmup(ctx context.Context, target device.Target, creds pairing
 }
 
 func (s *Sender) Launch(ctx context.Context, target device.Target, creds pairing.Credentials, link string) error {
-	return s.inner.Launch(ctx, target, creds, link)
+	if strings.Contains(link, "://") {
+		return s.inner.Launch(ctx, target, creds, link)
+	}
+	cert, err := intbey.LoadCredentials()
+	if err != nil {
+		return fmt.Errorf("load beyonder credentials: %w", err)
+	}
+	if cert == nil {
+		return s.inner.Launch(ctx, target, creds, link)
+	}
+	ctx, cancel := context.WithTimeout(ctx, stepBudget)
+	defer cancel()
+	c, err := connect(ctx, target, cert)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err := c.LaunchApp(ctx, link); err != nil {
+		if errors.Is(err, intbey.ErrNotPaired) {
+			return fmt.Errorf("%w: run beyonderprobe pair", err)
+		}
+		return err
+	}
+	return nil
+}
+
+func connect(ctx context.Context, target device.Target, cert *tls.Certificate) (*intbey.Client, error) {
+	c, err := intbey.Dial(ctx, net.JoinHostPort(target.Host, strconv.Itoa(Port)), cert)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := c.Hello(ctx, helloName); err != nil {
+		c.Close()
+		return nil, err
+	}
+	return c, nil
 }

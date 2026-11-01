@@ -74,6 +74,17 @@ func EncodeSpecialInput(v pb.VirtualInputPayload_SpecialInput) ([]byte, error) {
 	})
 }
 
+// EncodeLaunch builds a REMOTE_LAUNCHER request for an Android package.
+func EncodeLaunch(pkg string) ([]byte, error) {
+	object, err := proto.Marshal(&pb.LaunchRequest{PackageName: pkg})
+	if err != nil {
+		return nil, err
+	}
+	return base(pb.BaseMessage_SERVICEID_REMOTE_LAUNCHER, &pb.RemoteLauncherServicePayload{
+		Command: pb.RemoteLauncherServicePayload_REQUEST_LAUNCH, Object: object,
+	})
+}
+
 // EncodeRTTProbe builds an RTT probe: BaseMessage{time_stamp=nowMs}.
 func EncodeRTTProbe(nowMs uint64) ([]byte, error) {
 	return proto.Marshal(&pb.BaseMessage{TimeStamp: nowMs})
@@ -93,6 +104,9 @@ type Message struct {
 	AuthLevel      *pb.AuthorizationLevel
 	PairingResult  *pb.PairingResult
 	PinChallenge   bool // COMMAND_PIN_CHALLENGE received (no object)
+
+	Launcher     *pb.RemoteLauncherServicePayload
+	LaunchResult *pb.LaunchResponse
 
 	HostInfoPayload *pb.HostInfoServicePayload
 	HostInfo        *pb.HostInformation
@@ -115,6 +129,12 @@ func Decode(frame []byte) (Message, error) {
 		err = proto.Unmarshal(b.Payload, m.Handshake)
 	case pb.BaseMessage_SERVICEID_AUTHENTICATION:
 		err = m.decodeAuth(b.Payload)
+	case pb.BaseMessage_SERVICEID_REMOTE_LAUNCHER:
+		m.Launcher = &pb.RemoteLauncherServicePayload{}
+		if err = proto.Unmarshal(b.Payload, m.Launcher); err == nil && m.Launcher.Command == pb.RemoteLauncherServicePayload_RESPONSE_LAUNCH {
+			m.LaunchResult = &pb.LaunchResponse{}
+			err = proto.Unmarshal(m.Launcher.Object, m.LaunchResult)
+		}
 	case pb.BaseMessage_SERVICEID_HOST_INFO:
 		m.HostInfoPayload = &pb.HostInfoServicePayload{}
 		if err = proto.Unmarshal(b.Payload, m.HostInfoPayload); err == nil &&
@@ -177,6 +197,10 @@ func (m Message) String() string {
 			len(m.PairingResult.PrivateKey), len(m.PairingResult.Certificate))
 	case m.Authentication != nil:
 		fmt.Fprintf(&sb, " %v object=%x", m.Authentication.Command, m.Authentication.Object)
+	case m.LaunchResult != nil:
+		fmt.Fprintf(&sb, " %v result=%v", m.Launcher.Command, m.LaunchResult.Result)
+	case m.Launcher != nil:
+		fmt.Fprintf(&sb, " %v object=%x", m.Launcher.Command, m.Launcher.Object)
 	case m.HostInfo != nil:
 		fmt.Fprintf(&sb, " %v name=%q ip=%q port=%d androidId=%q abis=%v", m.HostInfoPayload.Command,
 			m.HostInfo.DeviceName, m.HostInfo.Ip, m.HostInfo.Port, m.HostInfo.AndroidId, m.HostInfo.SupportedAbis)

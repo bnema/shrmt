@@ -171,3 +171,37 @@ func TestFramesAndReassembler(t *testing.T) {
 		t.Fatalf("coalesced: %d %v", len(ms), err)
 	}
 }
+
+func TestEncodeLaunchGolden(t *testing.T) {
+	got, err := EncodeLaunch("com.google.android.youtube.tv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := unhex(t, "08f10712230802121f0a1d636f6d2e676f6f676c652e616e64726f69642e796f75747562652e7476")
+	if !bytes.Equal(got, want) {
+		t.Fatalf("got %x want %x", got, want)
+	}
+}
+
+func TestDecodeLaunchResponse(t *testing.T) {
+	for _, tc := range []struct {
+		name, frame string
+		result      pb.LaunchResponse_ResultType
+	}{
+		{"success", "08f1071202080318f107", pb.LaunchResponse_SUCCESS},
+		{"not installed", "08f1071206080312020801", pb.LaunchResponse_ACTIVITY_NOT_FOUND},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m, err := Decode(unhex(t, tc.frame))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if m.Launcher == nil || m.Launcher.Command != pb.RemoteLauncherServicePayload_RESPONSE_LAUNCH || m.LaunchResult == nil || m.LaunchResult.Result != tc.result {
+				t.Fatalf("unexpected response: %v", m)
+			}
+			if !strings.Contains(m.String(), tc.result.String()) {
+				t.Fatalf("missing result: %s", m)
+			}
+		})
+	}
+}

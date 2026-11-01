@@ -1,0 +1,53 @@
+// Reconstructed from the NVIDIA remote app disassembly.
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+// Carried in BaseMessage.payload with service_id = SERVICEID_REMOTE_LAUNCHER (1009).
+message RemoteLauncherServicePayload {
+  enum CommandType {
+    REQUEST_APP_LIST = 0;
+    RESPONSE_APP_LIST = 1;
+    REQUEST_LAUNCH = 2;
+    RESPONSE_LAUNCH = 3;
+    BROADCAST_APP_ADDED = 4;
+    BROADCAST_APP_REMOVED = 5;
+    BROADCAST_APP_UPDATED = 6;
+  }
+  CommandType command = 1;
+  bytes object = 2; // serialized LaunchRequest / LaunchResponse / AppListResponse
+}
+
+message LaunchRequest { string package_name = 1; }
+
+message LaunchResponse {
+  enum ResultType {
+    SUCCESS = 0;
+    ACTIVITY_NOT_FOUND = 1;
+  }
+  ResultType result = 1;
+}
+
+message AppInfo {
+  enum Category {
+    UNDEFINED = 0;
+    AUDIO = 1;
+    GAME = 2;
+    IMAGE = 3;
+    MAPS = 4;
+    NEWS = 5;
+    PRODUCTIVITY = 6;
+    SOCIAL = 7;
+    VIDEO = 8;
+  }
+  string package_name = 1;
+  string name = 2;
+  Category category = 3;
+  string banner_url = 4;
+  bool enabled = 5;
+  bool supports_leanback = 6;
+}
+
+message AppListResponse { repeated AppInfo app_infos = 1; }

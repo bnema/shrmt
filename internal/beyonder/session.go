@@ -131,6 +131,35 @@ func (c *Client) SendSpecialInput(ctx context.Context, v pb.VirtualInputPayload_
 	return c.Send(ctx, f)
 }
 
+// LaunchApp launches an Android package; requires VIRTUAL_INPUT level.
+func (c *Client) LaunchApp(ctx context.Context, pkg string) error {
+	c.mu.Lock()
+	level := c.level
+	c.mu.Unlock()
+	if level != LevelVirtualInput {
+		return ErrNotPaired
+	}
+	frame, err := EncodeLaunch(pkg)
+	if err != nil {
+		return err
+	}
+	if err := c.Send(ctx, frame); err != nil {
+		return err
+	}
+	m, err := c.wait(ctx, func(m Message) bool { return m.LaunchResult != nil })
+	if err != nil {
+		return fmt.Errorf("beyonder: waiting launch response: %w", err)
+	}
+	switch m.LaunchResult.Result {
+	case pb.LaunchResponse_SUCCESS:
+		return nil
+	case pb.LaunchResponse_ACTIVITY_NOT_FOUND:
+		return fmt.Errorf("beyonder: %s is not installed", pkg)
+	default:
+		return fmt.Errorf("beyonder: launch %s failed: %v", pkg, m.LaunchResult.Result)
+	}
+}
+
 // ParseCredentials builds a tls.Certificate from a certificate (X.509 DER or
 // PEM) and a private key (PKCS#8, or PKCS#1/EC as fallback; DER or PEM).
 func ParseCredentials(cert, key []byte) (tls.Certificate, error) {
