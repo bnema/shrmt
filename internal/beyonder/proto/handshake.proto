@@ -1,0 +1,27 @@
+// Reconstructed from handshake.pb.dart (Handshake._i @0x525d60) and
+// NvBeyonderHandshakeMsg.buildHelloMsg @0x525c24.
+syntax = "proto3";
+
+package beyonder;
+
+option go_package = "shrmt/internal/beyonder/proto;beyonderpb";
+
+// Carried in BaseMessage.payload with service_id = SERVICEID_HANDSHAKE (1).
+message Handshake {
+  enum CommandType {
+    COMMAND_PROTO3_REQUIRES_ZERO = 0;
+    COMMAND_HELLO = 1;
+    COMMAND_IDENTIFY = 2;  // never built by the app
+  }
+  enum DeviceOs {
+    DEVICEOS_PROTO3_REQUIRES_ZERO = 0;
+    DEVICEOS_ANDROID = 1;
+    DEVICEOS_IOS = 2;
+  }
+
+  CommandType command = 1;
+  string name = 2;          // client display name; hello is not sent if empty
+  DeviceOs device_os = 3;
+  bytes certificate = 4;    // optional; NetworkDevice.handshakeSayHello passes null
+  int32 capability = 5;     // Capability bitmask; app sends 81915 (0x13FFB)
+}
